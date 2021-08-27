@@ -5,40 +5,36 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-#hsv: float range[0,1]
-def HSVtoRGB(hsv):
+def GetColourRepr(rgb):
     #https://en.wikipedia.org/wiki/HSL_and_HSV
-    h = hsv[0]
-    s = hsv[1]
-    v = hsv[2]
+    R,G,B=rgb
+    V=0 #Value
+    C=0 #Chroma
+    L=0 #Lightness
+    H=0 #Hue
+    Sv=0 #Saturation (Value)
+    Sl=0 #Saturation (Lightness)
 
-    k_r = (5+6*h)%6
-    k_g = (3+6*h)%6
-    k_b = (1+6*h)%6
-    r = v-v*s*max(0,min([k_r, 4-k_r, 1]))
-    g = v-v*s*max(0,min([k_g, 4-k_g, 1]))
-    b = v-v*s*max(0,min([k_b, 4-k_b, 1]))
+    maxRGB = max(rgb)
+    minRGB = min(rgb)
 
-    return [r,g,b]
+    V = maxRGB 
+    C = V - minRGB 
+    L = (maxRGB+minRGB)/2 
 
-#rgb: float range[0,1]
-def RGBtoHSV(rgb):
-    r = rgb[0]
-    g = rgb[1]
-    b = rgb[2]
+    if (C==0): pass
+    elif (maxRGB==R): H = (0 + (G-B)/C)/6
+    elif (maxRGB==G): H = (2 + (B-R)/C)/6
+    elif (maxRGB==B): H = (4 + (R-G)/C)/6
 
-    v = max(rgb)
-    chroma = v - min(rgb)
+    Sv = (0 if V==0 else C/V)
 
-    s = (0 if v==0 else chroma/v)
+    Sl = 0 if L==0 or L==1 else (V-L)/min(L,1-L)
 
-    h = 0
-    if (chroma==0): pass
-    elif (v==r): h = (0 + (g-b)/chroma)/6
-    elif (v==g): h = (2 + (b-r)/chroma)/6
-    elif (v==b): h = (4 + (r-g)/chroma)/6
+    return R,G,B,V,C,L,H,Sv,Sl
 
-    return [h,s,v]
+
+
 
 #value: float range[0,1]
 #target: float range[0,1]
@@ -53,11 +49,11 @@ def TestTolWrap(value, target, tolerance):
 
 #pixel: float[3] range[0,1]
 def ConvertPixel(pixel):
-    h, s, v = RGBtoHSV(pixel)
+    R,G,B,V,C,L,H,Sv,Sl = GetColourRepr(pixel)
 
-    if (TestTolWrap(h, 0.1, 0.2) and
-        TestTol(s, 0.9, 0.4) and
-        TestTol(v, 0.7, 0.4)):
+    if (TestTolWrap(H, 0.1, 0.2) and
+        TestTol(Sv, 0.9, 0.4) and
+        TestTol(V, 0.7, 0.4)):
         return pixel
     return [0]
 
