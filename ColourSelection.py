@@ -40,7 +40,7 @@ def RGBtoHSV(rgb):
 #value: float range[0,1]
 #target: float range[0,1]
 #tolerance: float range[0,1]
-def WithinTolerance(value, target, posTol, negTol):
+def WithinTolerance(value, target, negTol, posTol):
     return (target-negTol <= value and value <= target+posTol)
 
 
