@@ -54,7 +54,7 @@ if not "ImageFilename" in options:
 img = plt.imread(options["ImageFilename"])
 
 img = ConvertImage(options["ImageFilename"])
-plt.imsave("TestOutput.png", img)
-img = ImageProcessing.EdgeDetection(img)
+plt.imsave("SelectedRegions.png", img)
 
-plt.imsave("TestOutput.png", img)
+img = ImageProcessing.EdgeDetection(img)
+plt.imsave("EdgeDetection.png", img)

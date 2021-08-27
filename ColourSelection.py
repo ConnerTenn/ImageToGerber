@@ -68,7 +68,9 @@ def ConvertImage(imagefile):
 
     height, width, depth = img.shape
 
-    print(F"{width}x{height} [{depth}]")
+    print(F"Image Resolution: {width}x{height} [{depth}]")
+    print("> Selecting Colours")
+    print()
     r=0
     for rows in img:
         for pixel in rows: pixel[...] = ConvertPixel(list(pixel))
