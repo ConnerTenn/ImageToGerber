@@ -3,6 +3,8 @@
 from Global import *
 
 import sys
+import matplotlib.pyplot as plt
+import ImageProcessing
 
 from ColourSelection import *
 
@@ -49,6 +51,10 @@ if not "ImageFilename" in options:
     print(TERM_RED+"Error: An image file must be specified"+TERM_RESET)
     ShowHelp()
 
+img = plt.imread(options["ImageFilename"])
 
 img = ConvertImage(options["ImageFilename"])
+plt.imsave("TestOutput.png", img)
+img = ImageProcessing.EdgeDetection(img)
+
 plt.imsave("TestOutput.png", img)
