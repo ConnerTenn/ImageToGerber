@@ -5,8 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def GetColourRepr(rgb):
+def GetColourRepr(pixel):
     #https://en.wikipedia.org/wiki/HSL_and_HSV
+
+    rgb = pixel[:3] #Slice off Alpha channel
+
     R,G,B=rgb
     V=0 #Value
     C=0 #Chroma
@@ -14,6 +17,9 @@ def GetColourRepr(rgb):
     H=0 #Hue
     Sv=0 #Saturation (Value)
     Sl=0 #Saturation (Lightness)
+    A=0 #Alpha
+
+    A = pixel[3] if len(pixel)==4 else 1
 
     maxRGB = max(rgb)
     minRGB = min(rgb)
@@ -31,7 +37,7 @@ def GetColourRepr(rgb):
 
     Sl = 0 if L==0 or L==1 else (V-L)/min(L,1-L)
 
-    return R,G,B,V,C,L,H,Sv,Sl
+    return R,G,B,V,C,L,H,Sv,Sl,A
 
 
 
@@ -49,18 +55,19 @@ def TestTolWrap(value, target, tolerance):
 
 #pixel: float[3] range[0,1]
 def ConvertPixel(pixel):
-    R,G,B,V,C,L,H,Sv,Sl = GetColourRepr(pixel)
+    R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
     if (TestTolWrap(H, 0.1, 0.2) and
         TestTol(Sv, 0.9, 0.4) and
         TestTol(V, 0.7, 0.4)):
+        # return [1,1,1,1]
         return pixel
-    return [0]
+    return [0,0,0,1]
 
 
 def ConvertImage(imagefile):
     img = plt.imread(imagefile)
-    img = img[...,:3]
+    img = img
 
     height, width, depth = img.shape
 
