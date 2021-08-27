@@ -6,7 +6,7 @@ def ParseFilename(line):
     tokens = line.split("\"")
 
     if len(tokens) != 3:
-        print("{TERM_RED}Malformed filepath specifier")
+        Error("Malformed filepath specifier")
 
     path = tokens[1]
     print(F">> {path} <<")

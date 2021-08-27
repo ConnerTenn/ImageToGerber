@@ -8,6 +8,10 @@ TERM_MAGENTA = "\033[1;35m"
 TERM_CYAN =    "\033[1;36m"
 TERM_WHITE =   "\033[1;37m"
 
+def Error(msg):
+    print(F"{TERM_RED}Error: {msg}{TERM_RESET}")
+    exit(1)
+
 def Assert(value, expected, msg=""):
     if (value==expected):
         print(F"{TERM_GREEN} PASS: {msg}{TERM_RESET}")
