@@ -25,11 +25,14 @@ def Convolution2d(img, kernel):
 
     out = np.zeros((img_height, img_width))
 
+    print("> Convolution")
+    print()
     # covolution
     for y in range(img_height):
         for x in range(img_width):
             piece     = np.resize(img[y:y+kernel_height, x:x+kernel_width], (3,3)) # pads with copies when needed
             out[y, x] = np.sum(kernel * piece)
+        print(F"\033[A{(y/img_height)*100:.2f}%")
 
     return out
 
