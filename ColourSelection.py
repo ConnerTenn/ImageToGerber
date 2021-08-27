@@ -1,6 +1,9 @@
 
 from math import *
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 
 #hsv: float range[0,1]
 def HSVtoRGB(hsv):
@@ -40,7 +43,38 @@ def RGBtoHSV(rgb):
 #value: float range[0,1]
 #target: float range[0,1]
 #tolerance: float range[0,1]
-def WithinTolerance(value, target, negTol, posTol):
-    return (target-negTol <= value and value <= target+posTol)
+def TestTol(value, target, tolerance):
+    return abs(target-value) <= tolerance/2
+
+def TestTolWrap(value, target, tolerance):
+    return (target-value)%1 <= tolerance/2 or (value-target)%1 <= tolerance/2
+
+
+
+#pixel: float[3] range[0,1]
+def ConvertPixel(pixel):
+    h, s, v = RGBtoHSV(pixel)
+
+    if (TestTolWrap(h, 0.1, 0.2) and
+        TestTol(s, 0.9, 0.4) and
+        TestTol(v, 0.7, 0.4)):
+        return pixel
+    return [0]
+
+
+def ConvertImage(imagefile):
+    img = plt.imread(imagefile)
+    img = img[...,:3]
+
+    height, width, depth = img.shape
+
+    print(F"{width}x{height} [{depth}]")
+    r=0
+    for rows in img:
+        for pixel in rows: pixel[...] = ConvertPixel(list(pixel))
+        r+=1
+        print(F"\033[A{(r/height)*100:.2f}%")
+
+    return img
 
 

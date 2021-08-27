@@ -4,6 +4,8 @@ from Global import *
 
 import sys
 
+from ColourSelection import *
+
 
 def ShowHelp():
     print( \
@@ -48,3 +50,5 @@ if not "ImageFilename" in options:
     ShowHelp()
 
 
+img = ConvertImage(options["ImageFilename"])
+plt.imsave("TestOutput.png", img)
