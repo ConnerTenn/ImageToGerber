@@ -1,6 +1,8 @@
 #!/bin/python3
 
 import sys
+import matplotlib.pyplot as plt
+import ImageProcessing
 
 TERM_RESET =   "\033[m"
 TERM_RED =     "\033[1;31m"
@@ -32,4 +34,8 @@ options = GetOptions()
 if not "ImageFilename" in options:
     print(TERM_RED+"Error: An image file must be specified"+TERM_RESET)
 
+img = plt.imread(options["ImageFilename"])
 
+img = ImageProcessing.EdgeDetection(img)
+
+plt.imsave("TestOutput.jpg", img)
