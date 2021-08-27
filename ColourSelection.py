@@ -2,7 +2,7 @@
 from math import *
 
 
-#hsv in range [0,1]
+#hsv: float range[0,1]
 def HSVtoRGB(hsv):
     #https://en.wikipedia.org/wiki/HSL_and_HSV
     h = hsv[0]
@@ -18,7 +18,7 @@ def HSVtoRGB(hsv):
 
     return [r,g,b]
 
-#rgb in range [0,1]
+#rgb: float range[0,1]
 def RGBtoHSV(rgb):
     r = rgb[0]
     g = rgb[1]
@@ -37,5 +37,10 @@ def RGBtoHSV(rgb):
 
     return [h,s,v]
 
+#value: float range[0,1]
+#target: float range[0,1]
+#tolerance: float range[0,1]
+def WithinTolerance(value, target, posTol, negTol):
+    return (target-negTol <= value and value <= target+posTol)
 
 
