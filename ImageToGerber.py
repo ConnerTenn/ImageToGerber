@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import ImageProcessing
 
 from ColourSelection import *
+from ConfigParser import *
 
 
 def ShowHelp():
@@ -50,6 +51,9 @@ options = GetOptions()
 if not "ImageFilename" in options:
     print(TERM_RED+"Error: An image file must be specified"+TERM_RESET)
     ShowHelp()
+
+if "ConfigFilename" in options:
+    ParseConfig(options["ConfigFilename"])
 
 img = plt.imread(options["ImageFilename"])
 
