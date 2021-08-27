@@ -38,4 +38,4 @@ img = plt.imread(options["ImageFilename"])
 
 img = ImageProcessing.EdgeDetection(img)
 
-plt.imsave("TestOutput.jpg", img)
+plt.imsave("TestOutput.png", img)
