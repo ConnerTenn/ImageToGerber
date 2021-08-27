@@ -45,11 +45,11 @@ def GetColourRepr(pixel):
 #value: float range[0,1]
 #target: float range[0,1]
 #tolerance: float range[0,1]
-def TestTol(value, target, tolerance):
-    return abs(target-value) <= tolerance/2
+def TestTol(value, target, posTol, negTol):
+    return (value-target) <= posTol/2 and (target-value) <= negTol/2
 
-def TestTolWrap(value, target, tolerance):
-    return (target-value)%1 <= tolerance/2 or (value-target)%1 <= tolerance/2
+def TestTolWrap(value, target, posTol, negTol):
+    return (value-target)%1 <= posTol/2 or (target-value)%1 <= negTol/2
 
 
 
@@ -57,9 +57,9 @@ def TestTolWrap(value, target, tolerance):
 def ConvertPixel(pixel):
     R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
-    if (TestTolWrap(H, 0.1, 0.2) and
-        TestTol(Sv, 0.9, 0.4) and
-        TestTol(V, 0.7, 0.4)):
+    if (TestTolWrap(H, 0.1, 0.2, 0.2) and
+        TestTol(Sv, 0.9, 0.4, 0.4) and
+        TestTol(V, 0.7, 0.4, 0.4)):
         # return [1,1,1,1]
         return pixel
     return [0,0,0,1]
