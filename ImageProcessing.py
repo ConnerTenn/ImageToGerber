@@ -34,4 +34,12 @@ def Convolution2d(img, kernel):
     return out
 
 def EdgeDetection(img):
-    return img
+    img_conv_y = Convolution2d(img, SOBEL_Y)
+    img_conv_x = Convolution2d(img, SOBEL_X)
+
+    # combine the y and x edges
+    img_conv = np.sqrt(np.square(img_conv_x) + np.square(img_conv_y))
+    # normalize values
+    img_conv *= 255 / img_conv.max()
+
+    return img_conv
