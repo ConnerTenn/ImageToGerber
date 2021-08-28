@@ -5,17 +5,38 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def Sigmoid(x):
+    return 1 / (1 + 2**(-x))
+
 
 def LineDetection(img):
     height, width, depth = img.shape
 
     lines = []
 
-    img = np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
+    # img = np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
+
+    grayscaleImg = np.zeros((height, width))
+    print("> Creating Grayscale")
+    for y in range(height):
+        for x in range(width):
+            r = img[y][x][0]
+            g = img[y][x][1]
+            b = img[y][x][2]
+
+            avg = (r+g+b)/3
+            grayscaleImg[y][x] = Sigmoid(50*(avg-0.5))
+        ProgressBar(y,0,height-1)
+    print()
+
+    img = grayscaleImg
+
+    plt.imsave("grayscale.png", img)
 
     img = img > 0.4
 
 
+    print("> Tracing outline")
     for y in range(height):
         for x in range(width):
             piece = np.resize(img[y:y+2, x:x+2], (2,2))
@@ -98,7 +119,6 @@ def LineDetection(img):
 img = plt.imread("Test1.png")
 height, width, depth = img.shape
 
-print("> Tracing outline")
 lines = LineDetection(img)
 
 print("> Plotting Segments")
