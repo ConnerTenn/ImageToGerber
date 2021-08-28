@@ -121,14 +121,14 @@ def ConvertPixel(pixel):
         return [0,0,0,1]
 
 
-def ConvertImage(imagefile, config):
+def ConvertImage(imagefile, selections):
     global Selections
     img = plt.imread(imagefile)
     img = img
 
     height, width, depth = img.shape
 
-    Selections = config["Processes"][0]["Selections"]
+    Selections = selections
 
     print(F"Image Resolution: {width}x{height} [{depth}]")
     print("> Selecting Colours")

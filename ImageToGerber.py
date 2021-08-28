@@ -3,6 +3,7 @@
 from Global import *
 
 import sys
+import os
 import matplotlib.pyplot as plt
 import ImageProcessing
 
@@ -62,11 +63,26 @@ try:
 except:
     Error("Failed to open Image")
 
-img = ConvertImage(options["ImageFilename"], config)
-plt.imsave("SelectedRegions.png", img)
+for i, proc in enumerate(config["Processes"]):
+    print()
+    print(F"{TERM_BLUE}=== Processing {i} ==={TERM_RESET}")
+    outPath = proc["Path"]
+    print(F"{TERM_WHITE}>> {outPath}{TERM_RESET}")
+    print()
 
-img_edge = ImageProcessing.EdgeDetection(img)
-plt.imsave("EdgeDetection.png", img_edge)
+    splitPath = outPath.rpartition("/")
+    # filename = splitPath[-1]
+    
+    if splitPath[1] == "/":
+        directory = splitPath[0]
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
 
-img_hough = ImageProcessing.LineDetection(img_edge)
-plt.imsave("LineDetection.png", img_hough)
+    img = ConvertImage(options["ImageFilename"], proc["Selections"])
+    plt.imsave(outPath+"_SelectedRegions.png", img)
+
+    img_edge = ImageProcessing.EdgeDetection(img)
+    plt.imsave(outPath+"_EdgeDetection.png", img_edge)
+
+    img_hough = ImageProcessing.LineDetection(img_edge)
+    plt.imsave(outPath+"_LineDetection.png", img_hough)
