@@ -68,15 +68,24 @@ def LineDetection(img):
     # setup hough space
     hough = np.zeros((r_dim, theta_dim))
 
-    for x in range(img_height):
-        for y in range(img_width):
-            if img[x,y] == 255:
+    print("> Hough Transform")
+    print()
+    for y in range(img_height):
+        for x in range(img_width):
+            if img[y,x] == 255:
                 continue
 
             for theta_idx in range(theta_dim):
                 theta = 1.0 * theta_idx * theta_max / theta_dim
-                r     = x * math.cos(theta) + y * math.sin(theta)
+                r     = y * math.cos(theta) + x * math.sin(theta)
                 r_idx = r_dim * (1.0 * r) / r_max
                 hough[int(r_idx), int(theta_idx)] = hough[int(r_idx), int(theta_idx)] + 1
+
+            print(F"\033[A{((y+1)/img_height)*100:.2f}%")
+
+    # getting extrema
+    neighborhood = 20  # adjustable params
+    threshold    = 140
+
 
     return hough
