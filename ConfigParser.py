@@ -1,10 +1,10 @@
 
 from Global import *
 
-ValidSelectionTokens = (
-    "R","G","B","V","C","L","H","Sv","Sl","A",
-    "RGB", "RGBA", "HSV", "HSVA", "HSL", "HSLA"
-)
+ColourFormats = {
+    "R":1,"G":1,"B":1,"V":1,"C":1,"L":1,"H":1,"Sv":1,"Sl":1,"A":1,
+    "RGB":3, "RGBA":4, "HSV":3, "HSVA":4, "HSL":3, "HSLA":3
+}
 
 
 def ParseFilename(line):
@@ -18,8 +18,19 @@ def ParseFilename(line):
     print(F"{TERM_MAGENTA}>> {path} <<{TERM_RESET}")
 
 
-def ParseParams(colourSel, params):
-    pass
+def ParseParams(colourFormat, params):
+    params = params.split(",")
+
+    if len(params) != ColourFormats[colourFormat]:
+        Error("Incorrect number of arguments for colour format")
+
+    args = []
+    for arg in params:
+        args += [float(arg)]
+    
+    print(F"{F'[{colourFormat}]':6s}: {args[0]}")
+    for arg in args[1:]:
+        print(F"      : {arg}")
 
 def ParseTolerance(tolerance):
     tolPos = 0
@@ -52,13 +63,11 @@ def ParseTolerance(tolerance):
         except:
             Error("Failed to parse tolerances")
         
-    print(F"        Tolerance +{tolPos}%")
-    print(F"        Tolerance -{tolNeg}%")
+    print(F"    Tolerance +{tolPos}% -{tolNeg}%")
 
 
 def ParseRule(rule):
     rule = rule.strip()
-    print(F"    {rule}")
 
     #Syntax checking
     if " " in rule:
@@ -79,13 +88,13 @@ def ParseRule(rule):
     if len(tokens) != 3:
         Error("Malformed rule")
 
-    colourSel = tokens[0]
+    colourFormat = tokens[0]
     params = tokens[1]
     tolerance = tokens[2]
 
-    for sel in ValidSelectionTokens:
-        if colourSel == sel:
-            ParseParams(colourSel, params)
+    for fmt in ColourFormats:
+        if colourFormat == fmt:
+            ParseParams(colourFormat, params)
             ParseTolerance(tolerance)
 
 
