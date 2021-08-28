@@ -1,43 +1,70 @@
 #!/bin/python3
 
+from Global import *
+
 import sys
 import matplotlib.pyplot as plt
 import ImageProcessing
 
-TERM_RESET =   "\033[m"
-TERM_RED =     "\033[1;31m"
-TERM_GREEN =   "\033[1;32m"
-TERM_YELLOW =  "\033[1;33m"
-TERM_BLUE =    "\033[1;34m"
-TERM_MAGENTA = "\033[1;35m"
-TERM_CYAN =    "\033[1;36m"
-TERM_WHITE =   "\033[1;37m"
+from ColourSelection import *
+from ConfigParser import *
 
+
+def ShowHelp():
+    print( \
+"""\
+Usage:
+./ImageToGerber.py [-h] [-c <config file>] <image file>
+    -h --help       Show the help menu. 
+                    This argument is optional and will cause the program to 
+                    exit immediately.
+    -c --config     Specify the config file to be used for processing the image.
+                    If none is specified, a default config will be used.
+                    This argument is optional.
+    <image file>    The image file to process. This argument is reqired.
+""")
+    exit()
 
 def GetOptions():
     options = {}
     argv = iter(sys.argv[1:])
     for arg in argv:
+        #Help menu
+        if arg=="-h" or arg=="--helph":
+            ShowHelp()
         #Config file
-        if arg=="-c":
+        if arg=="-c" or arg=="--config":
             try:
                 options["ConfigFilename"] = next(argv)
             except:
-                print(TERM_RED+"Error: -c must be followed by a filename"+TERM_RESET)
+                Error("-c must be followed by a filename")
+                ShowHelp()
+
         #Default (Last) argument
         else:
             options["ImageFilename"] = arg
 
     return options
 
+
 options = GetOptions()
 if not "ImageFilename" in options:
-    print(TERM_RED+"Error: An image file must be specified"+TERM_RESET)
+    Error("An image file must be specified")
+    ShowHelp()
 
-img = plt.imread(options["ImageFilename"])
+if "ConfigFilename" in options:
+    ParseConfig(options["ConfigFilename"])
+
+try:
+    img = plt.imread(options["ImageFilename"])
+except:
+    Error("Failed to open Image")
+
+img = ConvertImage(options["ImageFilename"])
+plt.imsave("SelectedRegions.png", img)
 
 img_edge = ImageProcessing.EdgeDetection(img)
+plt.imsave("EdgeDetection.png", img_edge)
 
 img_hough = ImageProcessing.LineDetection(img_edge)
-
-plt.imsave("TestOutput.png", img_hough)
+plt.imsave("LineDetection.png", img_hough)
