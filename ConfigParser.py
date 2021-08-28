@@ -50,6 +50,8 @@ def ParseConfig(filename):
 
     print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")
 
+    return config
+
 
 
 #Parse the file names at the beginning of a new section

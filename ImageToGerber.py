@@ -52,15 +52,17 @@ if not "ImageFilename" in options:
     Error("An image file must be specified")
     ShowHelp()
 
+config = None
+
 if "ConfigFilename" in options:
-    ParseConfig(options["ConfigFilename"])
+    config = ParseConfig(options["ConfigFilename"])
 
 try:
     img = plt.imread(options["ImageFilename"])
 except:
     Error("Failed to open Image")
 
-img = ConvertImage(options["ImageFilename"])
+img = ConvertImage(options["ImageFilename"], config)
 plt.imsave("SelectedRegions.png", img)
 
 img_edge = ImageProcessing.EdgeDetection(img)

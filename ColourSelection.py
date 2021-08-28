@@ -4,6 +4,7 @@ from math import *
 import numpy as np
 import matplotlib.pyplot as plt
 
+Selections = []
 
 def GetColourRepr(pixel):
     #https://en.wikipedia.org/wiki/HSL_and_HSV
@@ -57,19 +58,60 @@ def TestTolWrap(value, target, posTol, negTol):
 def ConvertPixel(pixel):
     R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
-    if (TestTolWrap(H, 0.1, 0.2, 0.2) and
-        TestTol(Sv, 0.9, 0.4, 0.4) and
-        TestTol(V, 0.7, 0.4, 0.4)):
-        # return [1,1,1,1]
-        return pixel
-    return [0,0,0,1]
+    # if (TestTolWrap(H, 0.1, 0.2, 0.2) and
+    #     TestTol(Sv, 0.9, 0.4, 0.4) and
+    #     TestTol(V, 0.7, 0.4, 0.4)):
+    #     # return [1,1,1,1]
+    #     return pixel
+    # return [0,0,0,1]
+
+    for selection in Selections:
+        rules = selection["Rules"]
+
+        for rule in rules:
+            fmt = rule["ColourFormat"]
+            fmtArgs = fmt["Args"]
+            tolPos = rule["Tol+"]
+            tolNeg = rule["Tol-"]
+
+            res = True
+
+            if "R" in fmt:
+                res &= TestTol(R, fmtArgs[fmt.find("R")], tolPos, tolNeg)
+            if "G" in fmt:
+                res &= TestTol(G, fmtArgs[fmt.find("G")], tolPos, tolNeg)
+            if "B" in fmt:
+                res &= TestTol(B, fmtArgs[fmt.find("B")], tolPos, tolNeg)
+            if "V" in fmt:
+                res &= TestTol(V, fmtArgs[fmt.find("V")], tolPos, tolNeg)
+            if "C" in fmt:
+                res &= TestTol(C, fmtArgs[fmt.find("C")], tolPos, tolNeg)
+            if "L" in fmt:
+                res &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
+            if "H" in fmt:
+                res &= TestTolWrap(R, fmtArgs[fmt.find("H")], tolPos, tolNeg)
+            if "Sv" in fmt:
+                res &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
+            if "Sl" in fmt:
+                res &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
+            if "A" in fmt:
+                res &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
+
+            if not res:
+                return [0,0,0,1]
 
 
-def ConvertImage(imagefile):
+    # return [1,1,1,1]
+    return pixel
+
+
+def ConvertImage(imagefile, config):
     img = plt.imread(imagefile)
     img = img
 
     height, width, depth = img.shape
+
+    Selections = config["Processes"][0]["Selections"]
 
     print(F"Image Resolution: {width}x{height} [{depth}]")
     print("> Selecting Colours")
