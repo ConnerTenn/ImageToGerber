@@ -95,14 +95,19 @@ def LineDetection(img):
 
     return lines
 
-img = plt.imread("Test3.png")
+img = plt.imread("Test1.png")
 height, width, depth = img.shape
+
+print("> Tracing outline")
 lines = LineDetection(img)
 
-for line in lines:
+print("> Plotting Segments")
+for i, line in enumerate(lines):
     line[1] = [height-line[1][0], height-line[1][1]]
     # plt.axline(line[0],line[1])
     plt.plot(line[0], line[1], color="k")
+    ProgressBar(i,0,len(lines)-1)
+print()
 # plt.xticks([])
 # plt.yticks([])
 plt.show()
