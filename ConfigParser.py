@@ -20,14 +20,14 @@ ParseConfig
 
 #Parse the config file
 def ParseConfig(filename):
-    print(F"{TERM_GREEN}=== Parsing Config ==={TERM_RESET}")
+    print(F"{TERM_BLUE}=== Parsing Config ==={TERM_RESET}")
     config={"Processes":[]}
 
     cfgfile=None
     try:
         cfgfile=open(filename)
     except:
-        print(F"{TERM_RED}Failed to open file {filename}{TERM_RESET}")
+        Error(F"Failed to open file {filename}")
 
 
     for line in cfgfile:
@@ -48,8 +48,6 @@ def ParseConfig(filename):
     # print(config)
     PrintDict(config)
 
-    print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")
-
     return config
 
 
@@ -63,7 +61,7 @@ def ParsePath(line):
         Error("Malformed filepath specifier")
 
     path = tokens[1]
-    print(F"{TERM_MAGENTA}> {path}{TERM_RESET}")
+    print(F"{TERM_GREEN}>> {path}{TERM_RESET}")
 
     return {"Path":path}
 

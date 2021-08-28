@@ -114,8 +114,8 @@ def ConvertPixel(pixel):
             #Selections are added together
             passSelections |= passRules
 
-    # return [1,1,1,1]
     if passSelections:
+        # return [1,1,1,1]
         return pixel
     else:
         return [0,0,0,1]
