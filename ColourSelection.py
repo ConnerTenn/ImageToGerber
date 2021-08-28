@@ -101,6 +101,11 @@ def ConvertPixel(pixel):
                 passRules &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
             if "A" in fmt:
                 passRules &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
+            if "S" in fmt:
+                if "V" in fmt:
+                    passRules &= TestTol(Sv, fmtArgs[fmt.find("S")], tolPos, tolNeg)
+                if "L" in fmt:
+                    passRules &= TestTol(Sl, fmtArgs[fmt.find("S")], tolPos, tolNeg)
 
         if selection["Negate"]:
             #Selections are and-ed
