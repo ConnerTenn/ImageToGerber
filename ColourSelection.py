@@ -1,4 +1,5 @@
 
+from Global import *
 from math import *
 
 import numpy as np
@@ -30,9 +31,9 @@ def GetColourRepr(pixel):
     L = (maxRGB+minRGB)/2 
 
     if (C==0): pass
-    elif (maxRGB==R): H = (0 + (G-B)/C)/6
-    elif (maxRGB==G): H = (2 + (B-R)/C)/6
-    elif (maxRGB==B): H = (4 + (R-G)/C)/6
+    elif (R>G and R>B): H = (0 + (G-B)/C)/6
+    elif (G>R and G>B): H = (2 + (B-R)/C)/6
+    elif (B>R and B>G): H = (4 + (R-G)/C)/6
 
     Sv = (0 if V==0 else C/V)
 
@@ -70,7 +71,7 @@ def ConvertPixel(pixel):
 
         for rule in rules:
             fmt = rule["ColourFormat"]
-            fmtArgs = fmt["Args"]
+            fmtArgs = rule["Args"]
             tolPos = rule["Tol+"]
             tolNeg = rule["Tol-"]
 
@@ -89,7 +90,7 @@ def ConvertPixel(pixel):
             if "L" in fmt:
                 res &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
             if "H" in fmt:
-                res &= TestTolWrap(R, fmtArgs[fmt.find("H")], tolPos, tolNeg)
+                res &= TestTolWrap(H, fmtArgs[fmt.find("H")], tolPos, tolNeg)
             if "Sv" in fmt:
                 res &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
             if "Sl" in fmt:
@@ -100,12 +101,12 @@ def ConvertPixel(pixel):
             if not res:
                 return [0,0,0,1]
 
-
     # return [1,1,1,1]
     return pixel
 
 
 def ConvertImage(imagefile, config):
+    global Selections
     img = plt.imread(imagefile)
     img = img
 
