@@ -173,6 +173,7 @@ def ParseConfig(filename):
 
     print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
 
-    print(config)
+    # print(config)
+    PrintDict(config)
 
     print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")

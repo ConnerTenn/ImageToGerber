@@ -19,3 +19,29 @@ def Assert(value, expected, msg=""):
         print(F"{TERM_RED} FAIL: {msg}")
         print(F" - - - ({value}) != Expected ({expected}){TERM_RESET}")
 
+def PrintList(obj, level=""):
+    print(level + "[")
+    for item in obj:
+        if type(item)==dict:
+            PrintDict(item, level+"| ")
+        elif type(item)==list:
+            PrintList(item, level+"| ")
+        else:
+            print(level + F"{item}")
+    print(level + "]")
+
+def PrintDict(obj, level=""):
+    print(level + "{")
+    for key, value in obj.items():
+        # print(key, value)
+        print(level + F"{key} : ", end="")
+        if type(value)==dict:
+            print()
+            PrintDict(value, level+"! ")
+        elif type(value)==list:
+            print()
+            PrintList(value, level+"! ")
+        else:
+            print(F"{value}")
+    print(level + "}")
+
