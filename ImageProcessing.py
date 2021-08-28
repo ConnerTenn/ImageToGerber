@@ -65,10 +65,11 @@ def LineDetection(img):
     r_min = 0
     r_dim = 200
 
+    # setup hough space
     hough = np.zeros((r_dim, theta_dim))
 
     for x in range(img_height):
-        for y in range(img_height):
+        for y in range(img_width):
             if img[x,y] == 255:
                 continue
 
