@@ -97,18 +97,19 @@ LineData = [
     }
 ]
 
-def InterpolatePos(a,b):
-    return 1.5-(a+b)
+def InterpolatePos(p1, p2, a,b):
+    mu = (0.5-a)/(b-a)
+    return p1 + mu*(p2-p1)
 
-def ConvertToCoords(lineIdx, tl,tr,bl,br):
+def ConvertToCoords(lineIdx, x,y, tl,tr,bl,br):
     if lineIdx == 1:
-        return [0.5,1]#[InterpolatePos(tl,tr), 1]
+        return InterpolatePos(np.array([x,y+1]), np.array([x+1,y+1]), tl,tr)
     if lineIdx == 2:
-        return [1,0.5]#[1, InterpolatePos(br,tr)]
+        return InterpolatePos(np.array([x+1,y]), np.array([x+1,y+1]), br,tr)
     if lineIdx == 3:
-        return [0.5,0]#[InterpolatePos(bl,br), 0]
+        return InterpolatePos(np.array([x,y]), np.array([x+1,y]), bl,br)
     if lineIdx == 4:
-        return [0,0.5]#[0, InterpolatePos(bl,tl)]
+        return InterpolatePos(np.array([x,y]), np.array([x,y+1]), bl,tl)
 
 def GenerateLines(x,y, tl,tr,bl,br):
     lines = []
@@ -121,15 +122,12 @@ def GenerateLines(x,y, tl,tr,bl,br):
             kernel[3] == (br>0.5)):
 
             for seg in dat["Segments"]:
-                p1 = ConvertToCoords(seg[0], tl,tr,bl,br)
-                p2 = ConvertToCoords(seg[1], tl,tr,bl,br)
-
-                p1 = (p1[0]+x, p1[1]+y)
-                p2 = (p2[0]+x, p2[1]+y)
                 # print()
+                # print(kernel)
+                p1 = ConvertToCoords(seg[0], x,y, tl,tr,bl,br)
+                p2 = ConvertToCoords(seg[1], x,y, tl,tr,bl,br)
                 # print(p1)
                 # print(p2)
-                # exit()
 
                 lines += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
     return lines
@@ -138,8 +136,6 @@ def LineDetection(img):
     height, width, depth = img.shape
 
     lines = []
-
-    # img = np.dot(img[...,:3], [0.2989, 0.5870, 0.1140])
 
     grayscaleImg = np.zeros((height, width))
     print("> Creating Grayscale")
@@ -150,7 +146,7 @@ def LineDetection(img):
             b = img[y][x][2]
 
             avg = (r+g+b)/3
-            grayscaleImg[y][x] = Sigmoid(20*(avg-0.5))
+            grayscaleImg[y][x] = Sigmoid(10*(avg-0.5))
         ProgressBar(y,0,height-1)
     print()
 
@@ -179,7 +175,7 @@ def LineDetection(img):
 
     return lines
 
-img = plt.imread("Test3.png")
+img = plt.imread("Test1.png")
 height, width, depth = img.shape
 
 lines = LineDetection(img)
