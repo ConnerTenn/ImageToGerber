@@ -48,10 +48,10 @@ def GetColourRepr(pixel):
 #target: float range[0,1]
 #tolerance: float range[0,1]
 def TestTol(value, target, posTol, negTol):
-    return (value-target) <= posTol/2 and (target-value) <= negTol/2
+    return value-target <= posTol and target-value <= negTol
 
 def TestTolWrap(value, target, posTol, negTol):
-    return (value-target)%1 <= posTol/2 or (target-value)%1 <= negTol/2
+    return (value-target)%1 <= posTol or (target-value)%1 <= negTol
 
 
 
@@ -66,8 +66,13 @@ def ConvertPixel(pixel):
     #     return pixel
     # return [0,0,0,1]
 
+    passSelections = False
+
     for selection in Selections:
         rules = selection["Rules"]
+
+        #Init to True since all rules must pass
+        passRules = True
 
         for rule in rules:
             fmt = rule["ColourFormat"]
@@ -75,34 +80,40 @@ def ConvertPixel(pixel):
             tolPos = rule["Tol+"]
             tolNeg = rule["Tol-"]
 
-            res = True
-
+            #Check the rule
             if "R" in fmt:
-                res &= TestTol(R, fmtArgs[fmt.find("R")], tolPos, tolNeg)
+                passRules &= TestTol(R, fmtArgs[fmt.find("R")], tolPos, tolNeg)
             if "G" in fmt:
-                res &= TestTol(G, fmtArgs[fmt.find("G")], tolPos, tolNeg)
+                passRules &= TestTol(G, fmtArgs[fmt.find("G")], tolPos, tolNeg)
             if "B" in fmt:
-                res &= TestTol(B, fmtArgs[fmt.find("B")], tolPos, tolNeg)
+                passRules &= TestTol(B, fmtArgs[fmt.find("B")], tolPos, tolNeg)
             if "V" in fmt:
-                res &= TestTol(V, fmtArgs[fmt.find("V")], tolPos, tolNeg)
+                passRules &= TestTol(V, fmtArgs[fmt.find("V")], tolPos, tolNeg)
             if "C" in fmt:
-                res &= TestTol(C, fmtArgs[fmt.find("C")], tolPos, tolNeg)
+                passRules &= TestTol(C, fmtArgs[fmt.find("C")], tolPos, tolNeg)
             if "L" in fmt:
-                res &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
+                passRules &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
             if "H" in fmt:
-                res &= TestTolWrap(H, fmtArgs[fmt.find("H")], tolPos, tolNeg)
+                passRules &= TestTolWrap(H, fmtArgs[fmt.find("H")], tolPos, tolNeg)
             if "Sv" in fmt:
-                res &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
+                passRules &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
             if "Sl" in fmt:
-                res &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
+                passRules &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
             if "A" in fmt:
-                res &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
+                passRules &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
 
-            if not res:
-                return [0,0,0,1]
+        if selection["Negate"]:
+            #Selections are and-ed
+            passSelections &= not passRules
+        else:
+            #Selections are added together
+            passSelections |= passRules
 
     # return [1,1,1,1]
-    return pixel
+    if passSelections:
+        return pixel
+    else:
+        return [0,0,0,1]
 
 
 def ConvertImage(imagefile, config):
