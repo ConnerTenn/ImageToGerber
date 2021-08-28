@@ -7,7 +7,7 @@ ColourFormats = {
 }
 
 #Parse the file names at the beginning of a new section
-def ParseFilename(line):
+def ParsePath(line):
     tokens = line.split("\"")
 
     #This line must only consist of a single name between quotes
@@ -16,6 +16,8 @@ def ParseFilename(line):
 
     path = tokens[1]
     print(F"{TERM_MAGENTA}> {path}{TERM_RESET}")
+
+    return {"Path":path}
 
 
 #Parse the parameters in a colour format
@@ -36,6 +38,8 @@ def ParseParams(colourFormat, params):
     print(F"{F'[{colourFormat}]':6s}: {args[0]}")
     for arg in args[1:]:
         print(F"      : {arg}")
+
+    return {"ColourFormat":colourFormat, "Args":args}
 
 #Parse the tolerance specifiers
 def ParseTolerance(tolerance):
@@ -78,10 +82,14 @@ def ParseTolerance(tolerance):
         
     print(F"    Tolerance +{tolPos}% -{tolNeg}%")
 
+    return {"Tol+":tolPos, "Tol-":tolNeg}
+
 
 #Parse each individual rule
 def ParseRule(rule):
     rule = rule.strip()
+
+    config = {}
 
     #Syntax checking
     if " " in rule:
@@ -110,11 +118,15 @@ def ParseRule(rule):
         Error(F"Invalid colour format specified \"{colourFormat}\"")
     for fmt in ColourFormats:
         if colourFormat == fmt:
-            ParseParams(colourFormat, params)
-            ParseTolerance(tolerance)
+            config |= ParseParams(colourFormat, params)
+            config |= ParseTolerance(tolerance)
+
+    return config
 
 #Parse a line of the selection specifier
 def ParseSelection(line):
+
+    config = {"Rules":[], "Negate":False}
 
     #syntax checking
     negate = line.count("!")
@@ -126,15 +138,18 @@ def ParseSelection(line):
             Error("Negation operator must appear first in the string")
         line=line[1:]
 
+        config["Negate"] = True
 
     for rule in line.split("&"):
-        ParseRule(rule)
+        config["Rules"] += [ParseRule(rule)]
+
+    return config
 
 
 #Parse the config file
 def ParseConfig(filename):
     print(F"{TERM_GREEN}=== Parsing Config ==={TERM_RESET}")
-    config=[]
+    config={"Processes":[]}
 
     cfgfile=None
     try:
@@ -150,9 +165,14 @@ def ParseConfig(filename):
 
             if line[0].isspace():
                 line = line.strip()
-
-                ParseSelection(line)
+                config["Processes"][-1]["Selections"] += [ParseSelection(line)]
             else:
-                ParseFilename(line)
+                config["Processes"] += [{}]
+                config["Processes"][-1] |= ParsePath(line)
+                config["Processes"][-1]["Selections"] = []
+
+    print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
+
+    print(config)
 
     print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")
