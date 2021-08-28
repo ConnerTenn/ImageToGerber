@@ -6,6 +6,52 @@ ColourFormats = {
     "RGB":3, "RGBA":4, "HSV":3, "HSVA":4, "HSL":3, "HSLA":3
 }
 
+"""
+== Call Stack ==
+ParseConfig
+    ParsePath
+    ParseSelection
+        ParseRule
+            ParseParams
+            ParseTolerance
+
+"""
+
+
+#Parse the config file
+def ParseConfig(filename):
+    print(F"{TERM_GREEN}=== Parsing Config ==={TERM_RESET}")
+    config={"Processes":[]}
+
+    cfgfile=None
+    try:
+        cfgfile=open(filename)
+    except:
+        print(F"{TERM_RED}Failed to open file {filename}{TERM_RESET}")
+
+
+    for line in cfgfile:
+        line = line.split("#")[0].rstrip()
+
+        if len(line):
+
+            if line[0].isspace():
+                line = line.strip()
+                config["Processes"][-1]["Selections"] += [ParseSelection(line)]
+            else:
+                config["Processes"] += [{}]
+                config["Processes"][-1] |= ParsePath(line)
+                config["Processes"][-1]["Selections"] = []
+
+    print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
+
+    # print(config)
+    PrintDict(config)
+
+    print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")
+
+
+
 #Parse the file names at the beginning of a new section
 def ParsePath(line):
     tokens = line.split("\"")
@@ -18,6 +64,70 @@ def ParsePath(line):
     print(F"{TERM_MAGENTA}> {path}{TERM_RESET}")
 
     return {"Path":path}
+
+
+
+#Parse a line of the selection specifier
+def ParseSelection(line):
+
+    config = {"Rules":[], "Negate":False}
+
+    #syntax checking
+    negate = line.count("!")
+    if negate>1:
+        Error("The negation operator must only be specified once")
+
+    if negate:
+        if line[0]!="!":
+            Error("Negation operator must appear first in the string")
+        line=line[1:]
+
+        config["Negate"] = True
+
+    for rule in line.split("&"):
+        config["Rules"] += [ParseRule(rule)]
+
+    return config
+
+
+
+#Parse each individual rule
+def ParseRule(rule):
+    rule = rule.strip()
+
+    config = {}
+
+    #Syntax checking
+    if " " in rule:
+        Error("There must not be space inside rules")
+    if rule.count("(")!=1 and rule.count(")")!=1:
+        Error("Malformed rule")
+    if rule.find("(") > rule.find(")"):
+        Error("Malformed rule")
+
+
+    #Delimit into sections, seperated by the brackets '(' and ')'
+    #Replace with temporary character and then split by that character
+    rule = rule.replace("(","\x80")
+    rule = rule.replace(")","\x80")
+
+    tokens = rule.split("\x80")
+    if len(tokens) != 3:
+        Error("Malformed rule")
+
+    colourFormat = tokens[0]
+    params = tokens[1]
+    tolerance = tokens[2]
+
+    #Find the matching colour format
+    if not colourFormat in ColourFormats:
+        Error(F"Invalid colour format specified \"{colourFormat}\"")
+    for fmt in ColourFormats:
+        if colourFormat == fmt:
+            config |= ParseParams(colourFormat, params)
+            config |= ParseTolerance(tolerance)
+
+    return config
 
 
 #Parse the parameters in a colour format
@@ -85,95 +195,3 @@ def ParseTolerance(tolerance):
     return {"Tol+":tolPos, "Tol-":tolNeg}
 
 
-#Parse each individual rule
-def ParseRule(rule):
-    rule = rule.strip()
-
-    config = {}
-
-    #Syntax checking
-    if " " in rule:
-        Error("There must not be space inside rules")
-    if rule.count("(")!=1 and rule.count(")")!=1:
-        Error("Malformed rule")
-    if rule.find("(") > rule.find(")"):
-        Error("Malformed rule")
-
-
-    #Delimit into sections, seperated by the brackets '(' and ')'
-    #Replace with temporary character and then split by that character
-    rule = rule.replace("(","\x80")
-    rule = rule.replace(")","\x80")
-
-    tokens = rule.split("\x80")
-    if len(tokens) != 3:
-        Error("Malformed rule")
-
-    colourFormat = tokens[0]
-    params = tokens[1]
-    tolerance = tokens[2]
-
-    #Find the matching colour format
-    if not colourFormat in ColourFormats:
-        Error(F"Invalid colour format specified \"{colourFormat}\"")
-    for fmt in ColourFormats:
-        if colourFormat == fmt:
-            config |= ParseParams(colourFormat, params)
-            config |= ParseTolerance(tolerance)
-
-    return config
-
-#Parse a line of the selection specifier
-def ParseSelection(line):
-
-    config = {"Rules":[], "Negate":False}
-
-    #syntax checking
-    negate = line.count("!")
-    if negate>1:
-        Error("The negation operator must only be specified once")
-
-    if negate:
-        if line[0]!="!":
-            Error("Negation operator must appear first in the string")
-        line=line[1:]
-
-        config["Negate"] = True
-
-    for rule in line.split("&"):
-        config["Rules"] += [ParseRule(rule)]
-
-    return config
-
-
-#Parse the config file
-def ParseConfig(filename):
-    print(F"{TERM_GREEN}=== Parsing Config ==={TERM_RESET}")
-    config={"Processes":[]}
-
-    cfgfile=None
-    try:
-        cfgfile=open(filename)
-    except:
-        print(F"{TERM_RED}Failed to open file {filename}{TERM_RESET}")
-
-
-    for line in cfgfile:
-        line = line.split("#")[0].rstrip()
-
-        if len(line):
-
-            if line[0].isspace():
-                line = line.strip()
-                config["Processes"][-1]["Selections"] += [ParseSelection(line)]
-            else:
-                config["Processes"] += [{}]
-                config["Processes"][-1] |= ParsePath(line)
-                config["Processes"][-1]["Selections"] = []
-
-    print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
-
-    # print(config)
-    PrintDict(config)
-
-    print(F"{TERM_GREEN}=== Done Parsing Config ==={TERM_RESET}")
