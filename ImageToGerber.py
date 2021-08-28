@@ -36,6 +36,8 @@ if not "ImageFilename" in options:
 
 img = plt.imread(options["ImageFilename"])
 
-img = ImageProcessing.EdgeDetection(img)
+img_edge = ImageProcessing.EdgeDetection(img)
 
-plt.imsave("TestOutput.png", img)
+img_hough = ImageProcessing.LineDetection(img_edge)
+
+plt.imsave("TestOutput.jpg", img_hough)
