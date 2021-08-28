@@ -97,37 +97,37 @@ LineData = [
     }
 ]
 
+#Linear interpolation between p1 and p2, based on the relative values of a,b, and 0.5
 def InterpolatePos(p1, p2, a,b):
     mu = (0.5-a)/(b-a)
     return p1 + mu*(p2-p1)
 
-def ConvertToCoords(lineIdx, x,y, tl,tr,bl,br):
+#Generate coordinates for a point on a line based on the type of line and the interpolation
+def ConvertToCoords(lineIdx, pos, tl,tr,bl,br):
     if lineIdx == 1:
-        return InterpolatePos(np.array([x,y+1]), np.array([x+1,y+1]), tl,tr)
+        return InterpolatePos(pos+[0,1], pos+[1,1], tl,tr)
     if lineIdx == 2:
-        return InterpolatePos(np.array([x+1,y]), np.array([x+1,y+1]), br,tr)
+        return InterpolatePos(pos+[1,0], pos+[1,1], br,tr)
     if lineIdx == 3:
-        return InterpolatePos(np.array([x,y]), np.array([x+1,y]), bl,br)
+        return InterpolatePos(pos+[0,0], pos+[1,0], bl,br)
     if lineIdx == 4:
-        return InterpolatePos(np.array([x,y]), np.array([x,y+1]), bl,tl)
+        return InterpolatePos(pos+[0,0], pos+[0,1], bl,tl)
 
 def GenerateLines(x,y, tl,tr,bl,br):
     lines = []
+
+    pos = np.array([x,y])
+    #Check each to see what line data matches the pixel pattern
     for dat in LineData:
         kernel = dat["Kernel"]
 
-        if (kernel[0] == (tl>0.5) and
-            kernel[1] == (tr>0.5) and
-            kernel[2] == (bl>0.5) and
-            kernel[3] == (br>0.5)):
+        #Check to see if the pixel pattern matches
+        if (kernel[0] == (tl>0.5) and kernel[1] == (tr>0.5) and kernel[2] == (bl>0.5) and kernel[3] == (br>0.5)):
 
+            #Generate a line for each segment in the pixel pattern
             for seg in dat["Segments"]:
-                # print()
-                # print(kernel)
-                p1 = ConvertToCoords(seg[0], x,y, tl,tr,bl,br)
-                p2 = ConvertToCoords(seg[1], x,y, tl,tr,bl,br)
-                # print(p1)
-                # print(p2)
+                p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
+                p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
 
                 lines += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
     return lines
@@ -152,7 +152,7 @@ def LineDetection(img):
 
     img = grayscaleImg
 
-    plt.imsave("grayscale.png", img)
+    plt.imsave("SigmoidGrayscale.png", img)
 
     # img = img > 0.4
 
