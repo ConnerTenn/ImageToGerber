@@ -43,10 +43,10 @@ def ParseConfig(filename):
                 config["Processes"][-1] |= ParsePath(line)
                 config["Processes"][-1]["Selections"] = []
 
-    print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
+    # print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
 
     # print(config)
-    PrintDict(config)
+    # PrintDict(config)
 
     return config
 
