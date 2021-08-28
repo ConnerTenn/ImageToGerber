@@ -18,6 +18,44 @@ def ParseFilename(line):
     print(F"{TERM_MAGENTA}>> {path} <<{TERM_RESET}")
 
 
+def ParseParams(colourSel, params):
+    pass
+
+def ParseTolerance(tolerance):
+    tolPos = 0
+    tolNeg = 0
+
+    if tolerance.count("+-")==1:
+        if tolerance.count("+")>1 or tolerance.count("-")>1:
+            Error("A +- tolerance must not be followed by additional tolerances")
+
+        plusminusIdx = tolerance.find("+-")
+        percentIdx = tolerance.find("%",plusminusIdx+1)
+        tolPos = tolNeg = int(tolerance[plusminusIdx+2:percentIdx])
+
+
+    else:
+        try:
+            if tolerance.find("+")!=-1:
+                plusIdx = tolerance.find("+")
+                percentIdx = tolerance.find("%",plusIdx+1)
+                if percentIdx==-1:
+                    Error("Malformed tolerance specifier")
+                tolPos = int(tolerance[plusIdx+1:percentIdx])
+
+            if tolerance.find("-")!=-1:
+                minusIdx = tolerance.find("+")
+                percentIdx = tolerance.find("%",minusIdx+1)
+                if percentIdx==-1:
+                    Error("Malformed tolerance specifier")
+                tolPos = int(tolerance[minusIdx+1:percentIdx])
+        except:
+            Error("Failed to parse tolerances")
+        
+    print(F"        Tolerance +{tolPos}%")
+    print(F"        Tolerance -{tolNeg}%")
+
+
 def ParseRule(rule):
     rule = rule.strip()
     print(F"    {rule}")
@@ -47,9 +85,8 @@ def ParseRule(rule):
 
     for sel in ValidSelectionTokens:
         if colourSel == sel:
-            # ParseParams(colourSel, params)
-            # ParseTolerance(tolerance)
-            pass
+            ParseParams(colourSel, params)
+            ParseTolerance(tolerance)
 
 
 def ParseSelection(line):
