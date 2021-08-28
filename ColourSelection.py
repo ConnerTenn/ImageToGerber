@@ -56,7 +56,7 @@ def TestTolWrap(value, target, posTol, negTol):
 
 
 #pixel: float[3] range[0,1]
-def ConvertPixel(pixel):
+def SelectPixel(pixel):
     R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
     # if (TestTolWrap(H, 0.1, 0.2, 0.2) and
@@ -121,7 +121,7 @@ def ConvertPixel(pixel):
         return [0,0,0,1]
 
 
-def ConvertImage(imagefile, selections):
+def SelectImageSections(imagefile, selections):
     global Selections
     img = plt.imread(imagefile)
     img = img
@@ -135,7 +135,7 @@ def ConvertImage(imagefile, selections):
     print()
     r=0
     for rows in img:
-        for pixel in rows: pixel[...] = ConvertPixel(list(pixel))
+        for pixel in rows: pixel[...] = SelectPixel(list(pixel))
         r+=1
         print(F"\033[A{(r/height)*100:.2f}%")
 

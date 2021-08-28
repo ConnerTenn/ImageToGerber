@@ -7,8 +7,8 @@ import os
 import matplotlib.pyplot as plt
 import ImageProcessing
 
-from ColourSelection import *
-from ConfigParser import *
+import ColourSelection
+import ConfigParser
 
 
 def ShowHelp():
@@ -56,7 +56,7 @@ if not "ImageFilename" in options:
 config = None
 
 if "ConfigFilename" in options:
-    config = ParseConfig(options["ConfigFilename"])
+    config = ConfigParser.ParseConfig(options["ConfigFilename"])
 
 try:
     img = plt.imread(options["ImageFilename"])
@@ -78,7 +78,7 @@ for i, proc in enumerate(config["Processes"]):
         if not os.path.isdir(directory):
             os.mkdir(directory)
 
-    img = ConvertImage(options["ImageFilename"], proc["Selections"])
+    img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"])
     plt.imsave(outPath+"_SelectedRegions.png", img)
 
     img_edge = ImageProcessing.EdgeDetection(img)
