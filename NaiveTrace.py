@@ -30,45 +30,64 @@ def LineDetection(img):
             # ++
             # ..
             if ((    tl) and (    tr) and (not bl) and (not br)):
-                lines += [ [[x,x+1], [y+1,y+1]] ]
+                lines += [ [[x+0.5,x+1.5], [y+1,y+1]] ]
             # ..
             # ++
             if ((not tl) and (not tr) and (    bl) and (    br)):
-                lines += [ [[x,x+1], [y,y]] ]
+                lines += [ [[x+0.5,x+1.5], [y+1,y+1]] ]
             # +.
             # +.
             if ((    tl) and (not tr) and (    bl) and (not br)):
-                lines += [ [[x,x], [y+1,y]] ]
+                lines += [ [[x+1,x+1], [y+0.5,y+1.5]] ]
             # .+
             # .+
             if ((not tl) and (    tr) and (not bl) and (    br)):
-                lines += [ [[x+1,x+1], [y+1,y]] ]
+                lines += [ [[x+1,x+1], [y+0.5,y+1.5]] ]
 
             # .+
             # ++
             if ((not tl) and (    tr) and (    bl) and (    br)):
-                lines += [ [[x,x+1], [y,y+1]] ]
+                lines += [ [[x+0.5,x+1], [y+1,y+1.5]] ]
             # +.
             # ++
             if ((    tl) and (not tr) and (    bl) and (    br)):
-                lines += [ [[x,x+1], [y+1,y]] ]
+                lines += [ [[x+1,x+1.5], [y+1.5,y+1]] ]
             # ++
             # .+
             if ((    tl) and (    tr) and (not bl) and (    br)):
-                lines += [ [[x,x+1], [y+1,y]] ]
+                lines += [ [[x+0.5,x+1], [y+1,y+0.5]] ]
             # ++
             # +.
             if ((    tl) and (    tr) and (    bl) and (not br)):
-                lines += [ [[x,x+1], [y,y+1]] ]
+                lines += [ [[x+1,x+1.5], [y+0.5,y+1]] ]
 
-            # .+
             # +.
-            if ((not tl) and (    tr) and (    bl) and (not br)):
-                lines += [ [[x,x+1], [y,y+1]] ]
+            # ..
+            if ((    tl) and (not tr) and (not bl) and (not br)):
+                lines += [ [[x+0.5,x+1], [y+1,y+1.5]] ]
+            # .+
+            # ..
+            if ((not tl) and (    tr) and (not bl) and (not br)):
+                lines += [ [[x+1,x+1.5], [y+1.5,y+1]] ]
+            # ..
+            # +.
+            if ((not tl) and (not tr) and (    bl) and (not br)):
+                lines += [ [[x+0.5,x+1], [y+1,y+0.5]] ]
+            # ..
+            # .+
+            if ((not tl) and (not tr) and (not bl) and (    br)):
+                lines += [ [[x+1,x+1.5], [y+0.5,y+1]] ]
+
             # +.
             # .+
             if ((    tl) and (not tr) and (not bl) and (    br)):
-                lines += [ [[x,x+1], [y+1,y]] ]
+                lines += [ [[x+0.5,x+1], [y+1,y+1.5]] ]
+                lines += [ [[x+1,x+1.5], [y+0.5,y+1]] ]
+            # .+
+            # +.
+            if ((not tl) and (    tr) and (    bl) and (not br)):
+                lines += [ [[x+1,x+1.5], [y+1.5,y+1]] ]
+                lines += [ [[x+0.5,x+1], [y+1,y+0.5]] ]
 
                 # exit()
         ProgressBar(y,0,height-1)
