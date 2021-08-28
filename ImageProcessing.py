@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -43,3 +44,35 @@ def EdgeDetection(img):
     img_conv *= 255 / img_conv.max()
 
     return img_conv
+
+# line detection with hough transform
+# maths is hard, https://en.wikipedia.org/wiki/Hough_transform
+# assuming greyscale and edge detected for now
+def LineDetection(img):
+    img_height, img_width = img.shape
+
+    # deterministic method of getting local extremes
+    # theta = angle between the straight line and the closest point to the origin
+    theta_max = 1.0 * math.pi
+    theta_min = 0
+    theta_dim = 300
+
+    # r = radius from the origin to the straight line
+    r_max = math.hypot(img_height, img_width)
+    r_min = 0
+    r_dim = 200
+
+    hough = np.zeros((r_dim, theta_dim))
+
+    for x in range(img_height):
+        for y in range(img_height):
+            if img[x,y] == 255:
+                continue
+
+            for theta_idx in range(theta_dim):
+                theta = 1.0 * theta_idx * theta_max / theta_dim
+                r     = x * math.cos(theta) + y * math.sin(theta)
+                r_idx = r_dim * (1.0 * r) / r_max
+                hough[int(r_idx), int(theta_idx)] = hough[int(r_idx), int(theta_idx)] + 1
+
+    return hough
