@@ -132,12 +132,13 @@ def SelectImageSections(imagefile, selections):
 
     print(F"Image Resolution: {width}x{height} [{depth}]")
     print("> Selecting Colours")
-    print()
     r=0
     for rows in img:
         for pixel in rows: pixel[...] = SelectPixel(list(pixel))
         r+=1
-        print(F"\033[A{(r/height)*100:.2f}%")
+        # print(F"\033[A{(r/height)*100:.2f}%")
+        ProgressBar(r, 0, height)
+    print()
 
     return img
 

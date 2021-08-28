@@ -1,3 +1,6 @@
+
+from Global import *
+
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -27,13 +30,13 @@ def Convolution2d(img, kernel):
     out = np.zeros((img_height, img_width))
 
     print("> Convolution")
-    print()
     # covolution
     for y in range(img_height):
         for x in range(img_width):
             piece     = np.resize(img[y:y+kernel_height, x:x+kernel_width], (3,3)) # pads with copies when needed
             out[y, x] = np.sum(kernel * piece)
-        print(F"\033[A{((y+1)/img_height)*100:.2f}%")
+        ProgressBar(y, 0, img_height-1)
+    print()
 
     return out
 
@@ -69,7 +72,6 @@ def LineDetection(img):
     hough = np.zeros((r_dim, theta_dim))
 
     print("> Hough Transform")
-    print()
     for y in range(img_height):
         for x in range(img_width):
             if img[y,x] == 255:
@@ -80,8 +82,8 @@ def LineDetection(img):
                 r     = y * math.cos(theta) + x * math.sin(theta)
                 r_idx = r_dim * (1.0 * r) / r_max
                 hough[int(r_idx), int(theta_idx)] = hough[int(r_idx), int(theta_idx)] + 1
-
-            print(F"\033[A{((y+1)/img_height)*100:.2f}%")
+        ProgressBar(y, 0, img_height-1)
+    print()
 
     # getting extrema
     neighborhood = 20  # adjustable params

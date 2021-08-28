@@ -1,4 +1,6 @@
 
+import sys
+
 TERM_RESET =   "\033[m"
 TERM_RED =     "\033[1;31m"
 TERM_GREEN =   "\033[1;32m"
@@ -45,3 +47,12 @@ def PrintDict(obj, level=""):
             print(F"{value}")
     print(level + "}")
 
+
+#val in range[minimum,maximum]
+#Must be followed by an empty print before printing anything after the progress bar
+def ProgressBar(val, minimum, maximum):
+    barSize = 50
+    progress = (val-minimum)/maximum
+    numbars = int(barSize*progress)
+    bars = "="*numbars + " "*(barSize-numbars)
+    print(F"\033[1G[{bars}] {100*progress:.1f}%",end="", flush=True)
