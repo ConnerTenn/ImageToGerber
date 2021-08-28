@@ -3,6 +3,11 @@
 from Global import *
 
 import sys
+import matplotlib.pyplot as plt
+import ImageProcessing
+
+from ColourSelection import *
+from ConfigParser import *
 
 
 def ShowHelp():
@@ -32,7 +37,7 @@ def GetOptions():
             try:
                 options["ConfigFilename"] = next(argv)
             except:
-                print(TERM_RED+"Error: -c must be followed by a filename"+TERM_RESET)
+                Error("-c must be followed by a filename")
                 ShowHelp()
 
         #Default (Last) argument
@@ -44,7 +49,22 @@ def GetOptions():
 
 options = GetOptions()
 if not "ImageFilename" in options:
-    print(TERM_RED+"Error: An image file must be specified"+TERM_RESET)
+    Error("An image file must be specified")
     ShowHelp()
 
+if "ConfigFilename" in options:
+    ParseConfig(options["ConfigFilename"])
 
+try:
+    img = plt.imread(options["ImageFilename"])
+except:
+    Error("Failed to open Image")
+
+img = ConvertImage(options["ImageFilename"])
+plt.imsave("SelectedRegions.png", img)
+
+img_edge = ImageProcessing.EdgeDetection(img)
+plt.imsave("EdgeDetection.png", img_edge)
+
+img_hough = ImageProcessing.LineDetection(img_edge)
+plt.imsave("LineDetection.png", img_hough)
