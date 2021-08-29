@@ -56,3 +56,10 @@ def ProgressBar(val, minimum, maximum):
     numbars = int(barSize*progress)
     bars = "="*numbars + " "*(barSize-numbars)
     print(F"\033[1G[{bars}] {100*progress:.1f}%",end="", flush=True)
+
+
+def Sigmoid(x):
+    return 1 / (1 + 2**(-x))
+
+def Norm(x, factor):
+    return 2**(-factor*(x**2))
