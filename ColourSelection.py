@@ -53,26 +53,33 @@ def TestTol(value, target, posTol, negTol):
 def TestTolWrap(value, target, posTol, negTol):
     return (value-target)%1 <= posTol or (target-value)%1 <= negTol
 
+#https://www.desmos.com/calculator/mqcfc2lfu0
+def Factor(value, posTol, negTol):
+    smoothing = 1
+    factor = 30/smoothing
+    return min(
+        Sigmoid(-factor*(value-posTol)),
+        Sigmoid( factor*(value+negTol))
+    )
+
+def TestTolDist(value, target, posTol, negTol):
+    return Factor(value-target, posTol, negTol)
+
+def TestTolWrapDist(value, target, posTol, negTol):
+    return Factor(sin(pi*(value-target)), posTol, negTol)
 
 
 #pixel: float[3] range[0,1]
 def SelectPixel(pixel):
     R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
-    # if (TestTolWrap(H, 0.1, 0.2, 0.2) and
-    #     TestTol(Sv, 0.9, 0.4, 0.4) and
-    #     TestTol(V, 0.7, 0.4, 0.4)):
-    #     # return [1,1,1,1]
-    #     return pixel
-    # return [0,0,0,1]
-
-    passSelections = False
+    selectionDist = 10**100
 
     for selection in Selections:
         rules = selection["Rules"]
 
         #Init to True since all rules must pass
-        passRules = True
+        dist = 10**100
 
         for rule in rules:
             fmt = rule["ColourFormat"]
@@ -82,43 +89,41 @@ def SelectPixel(pixel):
 
             #Check the rule
             if "R" in fmt:
-                passRules &= TestTol(R, fmtArgs[fmt.find("R")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(R, fmtArgs[fmt.find("R")], tolPos, tolNeg))
             if "G" in fmt:
-                passRules &= TestTol(G, fmtArgs[fmt.find("G")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(G, fmtArgs[fmt.find("G")], tolPos, tolNeg))
             if "B" in fmt:
-                passRules &= TestTol(B, fmtArgs[fmt.find("B")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(B, fmtArgs[fmt.find("B")], tolPos, tolNeg))
             if "V" in fmt:
-                passRules &= TestTol(V, fmtArgs[fmt.find("V")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(V, fmtArgs[fmt.find("V")], tolPos, tolNeg))
             if "C" in fmt:
-                passRules &= TestTol(C, fmtArgs[fmt.find("C")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(C, fmtArgs[fmt.find("C")], tolPos, tolNeg))
             if "L" in fmt:
-                passRules &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(L, fmtArgs[fmt.find("L")], tolPos, tolNeg))
             if "H" in fmt:
-                passRules &= TestTolWrap(H, fmtArgs[fmt.find("H")], tolPos, tolNeg)
+                dist = min(dist, TestTolWrapDist(H, fmtArgs[fmt.find("H")], tolPos, tolNeg))
             if "Sv" in fmt:
-                passRules &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg))
             if "Sl" in fmt:
-                passRules &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg))
             if "A" in fmt:
-                passRules &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
+                dist = min(dist, TestTolDist(A, fmtArgs[fmt.find("A")], tolPos, tolNeg))
             if "S" in fmt:
                 if "V" in fmt:
-                    passRules &= TestTol(Sv, fmtArgs[fmt.find("S")], tolPos, tolNeg)
+                    dist = min(dist, TestTolDist(Sv, fmtArgs[fmt.find("S")], tolPos, tolNeg))
                 if "L" in fmt:
-                    passRules &= TestTol(Sl, fmtArgs[fmt.find("S")], tolPos, tolNeg)
+                    dist = min(dist, TestTolDist(Sl, fmtArgs[fmt.find("S")], tolPos, tolNeg))
 
         if selection["Negate"]:
             #Selections are and-ed
-            passSelections &= not passRules
+            # passSelections &= not passRules
+            selectionDist = min(1-dist, selectionDist)
         else:
             #Selections are added together
-            passSelections |= passRules
+            # passSelections |= passRules
+            selectionDist = min(dist, selectionDist)
 
-    if passSelections:
-        # return [1,1,1,1]
-        return pixel
-    else:
-        return [0,0,0,1]
+    return [selectionDist]*3 +[1]
 
 
 def SelectImageSections(imagefile, selections):
