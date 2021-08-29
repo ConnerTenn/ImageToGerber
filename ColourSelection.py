@@ -55,8 +55,11 @@ def TestTolWrap(value, target, posTol, negTol):
 
 #https://www.desmos.com/calculator/mqcfc2lfu0
 def Factor(value, posTol, negTol):
+    #Small fudge factor for ensureing tolerance of 0 still returns valid pixels
+    posTol+=0.01
+    negTol+=0.01
     smoothing = 1
-    factor = 20/smoothing
+    factor = 10/smoothing
     return min(
         Sigmoid(-factor*(value-posTol)),
         Sigmoid( factor*(value+negTol))

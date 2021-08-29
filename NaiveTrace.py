@@ -118,7 +118,7 @@ def GenerateLines(x,y, tl,tr,bl,br):
         kernel = dat["Kernel"]
 
         #Check to see if the pixel pattern matches
-        if (kernel[0] == (tl>0.5) and kernel[1] == (tr>0.5) and kernel[2] == (bl>0.5) and kernel[3] == (br>0.5)):
+        if (kernel[0] == (tl>=0.5) and kernel[1] == (tr>=0.5) and kernel[2] == (bl>=0.5) and kernel[3] == (br>=0.5)):
 
             #Generate a line for each segment in the pixel pattern
             for seg in dat["Segments"]:
