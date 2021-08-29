@@ -9,6 +9,7 @@ import ImageProcessing
 
 import ColourSelection
 import ConfigParser
+import NaiveTrace
 
 
 def ShowHelp():
@@ -81,8 +82,8 @@ for i, proc in enumerate(config["Processes"]):
     img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"])
     plt.imsave(outPath+"_SelectedRegions.png", img)
 
-    img_edge = ImageProcessing.EdgeDetection(img)
-    plt.imsave(outPath+"_EdgeDetection.png", img_edge)
+    lines = NaiveTrace.LineDetection(img)
+    NaiveTrace.PlotLines(lines)
 
     img_hough = ImageProcessing.LineDetection(img_edge)
     plt.imsave(outPath+"_LineDetection.png", img_hough)

@@ -5,10 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def Sigmoid(x):
-    return 1 / (1 + 2**(-x))
-
-
 """
  +----+   +----+
  |####| 1 |####|
@@ -146,7 +142,7 @@ def LineDetection(img):
             b = img[y][x][2]
 
             avg = (r+g+b)/3
-            grayscaleImg[y][x] = Sigmoid(10*(avg-0.5))
+            grayscaleImg[y][x] = avg #Sigmoid(10*(avg-0.5))
         ProgressBar(y,0,height-1)
     print()
 
@@ -175,18 +171,15 @@ def LineDetection(img):
 
     return lines
 
-img = plt.imread("Test1.png")
-height, width, depth = img.shape
 
-lines = LineDetection(img)
-
-print("> Plotting Segments")
-for i, line in enumerate(lines):
-    line[1] = [height-line[1][0], height-line[1][1]]
-    # plt.axline(line[0],line[1])
-    plt.plot(line[0], line[1], color="k")
-    ProgressBar(i,0,len(lines)-1)
-print()
-# plt.xticks([])
-# plt.yticks([])
-plt.show()
+def PlotLines(lines):
+    print("> Plotting Segments")
+    for i, line in enumerate(lines):
+        line[1] = [-line[1][0], -line[1][1]]
+        # plt.axline(line[0],line[1])
+        plt.plot(line[0], line[1], color="k")
+        ProgressBar(i,0,len(lines)-1)
+    print()
+    # plt.xticks([])
+    # plt.yticks([])
+    plt.show()

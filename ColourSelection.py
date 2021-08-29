@@ -56,7 +56,7 @@ def TestTolWrap(value, target, posTol, negTol):
 #https://www.desmos.com/calculator/mqcfc2lfu0
 def Factor(value, posTol, negTol):
     smoothing = 1
-    factor = 30/smoothing
+    factor = 20/smoothing
     return min(
         Sigmoid(-factor*(value-posTol)),
         Sigmoid( factor*(value+negTol))
