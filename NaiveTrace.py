@@ -153,7 +153,7 @@ def LineDetection(img):
 
         img = grayscaleImg
 
-    plt.imsave("SigmoidGrayscale.png", img)
+    # plt.imsave("SigmoidGrayscale.png", img)
 
     # img = img > 0.4
 
