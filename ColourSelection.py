@@ -53,6 +53,64 @@ def TestTol(value, target, posTol, negTol):
 def TestTolWrap(value, target, posTol, negTol):
     return (value-target)%1 <= posTol or (target-value)%1 <= negTol
 
+#pixel: float[3] range[0,1]
+def SelectPixel(pixel):
+    R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
+
+    passSelections = False
+
+    for selection in Selections:
+        rules = selection["Rules"]
+
+        #Init to True since all rules must pass
+        passRules = True
+
+        for rule in rules:
+            fmt = rule["ColourFormat"]
+            fmtArgs = rule["Args"]
+            tolPos = rule["Tol+"]
+            tolNeg = rule["Tol-"]
+
+            #Check the rule
+            if "R" in fmt:
+                passRules &= TestTol(R, fmtArgs[fmt.find("R")], tolPos, tolNeg)
+            if "G" in fmt:
+                passRules &= TestTol(G, fmtArgs[fmt.find("G")], tolPos, tolNeg)
+            if "B" in fmt:
+                passRules &= TestTol(B, fmtArgs[fmt.find("B")], tolPos, tolNeg)
+            if "V" in fmt:
+                passRules &= TestTol(V, fmtArgs[fmt.find("V")], tolPos, tolNeg)
+            if "C" in fmt:
+                passRules &= TestTol(C, fmtArgs[fmt.find("C")], tolPos, tolNeg)
+            if "L" in fmt:
+                passRules &= TestTol(L, fmtArgs[fmt.find("L")], tolPos, tolNeg)
+            if "H" in fmt:
+                passRules &= TestTolWrap(H, fmtArgs[fmt.find("H")], tolPos, tolNeg)
+            if "Sv" in fmt:
+                passRules &= TestTol(Sv, fmtArgs[fmt.find("Sv")], tolPos, tolNeg)
+            if "Sl" in fmt:
+                passRules &= TestTol(Sl, fmtArgs[fmt.find("Sl")], tolPos, tolNeg)
+            if "A" in fmt:
+                passRules &= TestTol(A, fmtArgs[fmt.find("A")], tolPos, tolNeg)
+            if "S" in fmt:
+                if "V" in fmt:
+                    passRules &= TestTol(Sv, fmtArgs[fmt.find("S")], tolPos, tolNeg)
+                if "L" in fmt:
+                    passRules &= TestTol(Sl, fmtArgs[fmt.find("S")], tolPos, tolNeg)
+
+        if selection["Negate"]:
+            #Selections are and-ed
+            passSelections &= not passRules
+        else:
+            #Selections are added together
+            passSelections |= passRules
+
+    if passSelections:
+        return [1,1,1,1]
+        # return pixel
+    else:
+        return [0,0,0,1]
+
 #https://www.desmos.com/calculator/mqcfc2lfu0
 def Factor(value, posTol, negTol):
     #Small fudge factor for ensureing tolerance of 0 still returns valid pixels
@@ -73,7 +131,7 @@ def TestTolWrapDist(value, target, posTol, negTol):
 
 
 #pixel: float[3] range[0,1]
-def SelectPixel(pixel):
+def SelectPixelDist(pixel):
     R,G,B,V,C,L,H,Sv,Sl,A = GetColourRepr(pixel)
 
     selectionDist = 10**100
@@ -142,7 +200,8 @@ def SelectImageSections(imagefile, selections):
     print("> Selecting Colours")
     r=0
     for rows in img:
-        for pixel in rows: pixel[...] = SelectPixel(list(pixel))
+        # for pixel in rows: pixel[...] = SelectPixel(list(pixel))
+        for pixel in rows: pixel[...] = SelectPixelDist(list(pixel))
         r+=1
         # print(F"\033[A{(r/height)*100:.2f}%")
         ProgressBar(r, 0, height)
