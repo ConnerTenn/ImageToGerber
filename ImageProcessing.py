@@ -91,3 +91,12 @@ def LineDetection(img):
 
 
     return hough
+
+
+def GaussianBlur(img):
+    kernel = np.array([[1, 2, 1],
+                       [2, 4, 2],
+                       [1, 2, 1]])
+
+    return Convolution2d(img, kernel)
+

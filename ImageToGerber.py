@@ -16,19 +16,22 @@ def ShowHelp():
     print( \
 """\
 Usage:
-./ImageToGerber.py [-h] [-c <config file>] <image file>
+./ImageToGerber.py [-h] [-c <config file>] [-m <method>] <image file>
     -h --help       Show the help menu. 
                     This argument is optional and will cause the program to 
                     exit immediately.
     -c --config     Specify the config file to be used for processing the image.
                     If none is specified, a default config will be used.
                     This argument is optional.
+    -m --method     <Dist/Blur/Blocky>
+                    Select which pixel selection processing method should be used.
+                    Defaults to Dist
     <image file>    The image file to process. This argument is reqired.
 """)
     exit()
 
 def GetOptions():
-    options = {}
+    options = {"ConfigFilename":None, "Method":"Dist"}
     argv = iter(sys.argv[1:])
     for arg in argv:
         #Help menu
@@ -40,6 +43,17 @@ def GetOptions():
                 options["ConfigFilename"] = next(argv)
             except:
                 Error("-c must be followed by a filename")
+                ShowHelp()
+        #Processing method
+        if arg=="-m" or arg=="--method":
+            try:
+                options["Method"] = next(argv)
+            except:
+                Error("-m must be followed by a method selection")
+                ShowHelp()
+
+            if not options["Method"] in ["Dist", "Blur", "Blocky"]:
+                Error("Invalid method selection")
                 ShowHelp()
 
         #Default (Last) argument
@@ -79,7 +93,9 @@ for i, proc in enumerate(config["Processes"]):
         if not os.path.isdir(directory):
             os.mkdir(directory)
 
-    img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"])
+    img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"], options["Method"])
+    if options["Method"] == "Blur":
+        img = ImageProcessing.GaussianBlur(img)
     plt.imsave(outPath+"_SelectedRegions.png", img)
 
     lines = NaiveTrace.LineDetection(img)

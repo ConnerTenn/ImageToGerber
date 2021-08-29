@@ -129,24 +129,29 @@ def GenerateLines(x,y, tl,tr,bl,br):
     return lines
 
 def LineDetection(img):
-    height, width, depth = img.shape
+    shape = img.shape
+    height = shape[0]
+    width = shape[1]
+    depth = 1
+    if len(shape)==3: depth = shape[2]
 
     lines = []
 
-    grayscaleImg = np.zeros((height, width))
-    print("> Creating Grayscale")
-    for y in range(height):
-        for x in range(width):
-            r = img[y][x][0]
-            g = img[y][x][1]
-            b = img[y][x][2]
+    if depth>1:
+        grayscaleImg = np.zeros((height, width))
+        print("> Creating Grayscale")
+        for y in range(height):
+            for x in range(width):
+                r = img[y][x][0]
+                g = img[y][x][1]
+                b = img[y][x][2]
 
-            avg = (r+g+b)/3
-            grayscaleImg[y][x] = avg #Sigmoid(10*(avg-0.5))
-        ProgressBar(y,0,height-1)
-    print()
+                avg = (r+g+b)/3
+                grayscaleImg[y][x] = avg #Sigmoid(10*(avg-0.5))
+            ProgressBar(y,0,height-1)
+        print()
 
-    img = grayscaleImg
+        img = grayscaleImg
 
     plt.imsave("SigmoidGrayscale.png", img)
 

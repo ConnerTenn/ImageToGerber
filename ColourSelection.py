@@ -187,7 +187,7 @@ def SelectPixelDist(pixel):
     return [selectionDist]*3 +[1]
 
 
-def SelectImageSections(imagefile, selections):
+def SelectImageSections(imagefile, selections, method):
     global Selections
     img = plt.imread(imagefile)
     img = img
@@ -196,12 +196,15 @@ def SelectImageSections(imagefile, selections):
 
     Selections = selections
 
+    selPixelFunc = SelectPixel
+    if method == "Dist":
+        selPixelFunc = SelectPixelDist
+
     print(F"Image Resolution: {width}x{height} [{depth}]")
     print("> Selecting Colours")
     r=0
     for rows in img:
-        # for pixel in rows: pixel[...] = SelectPixel(list(pixel))
-        for pixel in rows: pixel[...] = SelectPixelDist(list(pixel))
+        for pixel in rows: pixel[...] = selPixelFunc(list(pixel))
         r+=1
         # print(F"\033[A{(r/height)*100:.2f}%")
         ProgressBar(r, 0, height)
