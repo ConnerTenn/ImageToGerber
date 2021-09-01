@@ -4,6 +4,7 @@ from Global import *
 
 import sys
 import os
+import numpy as np
 import matplotlib.pyplot as plt
 import ImageProcessing
 
@@ -99,8 +100,11 @@ for i, proc in enumerate(config["Processes"]):
         img = ImageProcessing.GaussianBlur(img)
     plt.imsave(outPath+"_SelectedRegions.png", img)
 
+    #Convert to scalar array (taking red channel only)
+    img = np.dot(img[...,:1], [1])
+
     if options["Method"] == "Pixel":
-        GerberWriter.GenerateBlocky(img, outPath)
+        GerberWriter.GeneratePixelated(img, outPath)
     else:
         lines = NaiveTrace.LineDetection(img)
         NaiveTrace.PlotLines(lines)

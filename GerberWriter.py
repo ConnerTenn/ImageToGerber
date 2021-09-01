@@ -26,20 +26,18 @@ def WriteHeader(file):
     file.write("%LPD*%\n") #Dark polarity
 
 
-def GenerateBlocky(img, filename):
+def GeneratePixelated(img, filename):
     file = CreateFile(filename)
     WriteHeader(file)
     file.write("%ADD10R,1X1*%") #Rectangle Object
     file.write("D10*") #Use Rectangle Object
 
-    arr = np.dot(img[...,:3], [1, 1, 1])
-
-    height, width = arr.shape
+    height, width = img.shape
 
     print("> Writing Gerber")
     for y in range(height):
         for x in range(width):
-            if arr[y][x]:
+            if img[y][x]:
                 file.write("X"+NumRepr(x)+"Y"+NumRepr(height-y)+"D03*\n")
         ProgressBar(y, 0, height-1)
     print()
