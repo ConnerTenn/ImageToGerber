@@ -10,6 +10,7 @@ import ImageProcessing
 import ColourSelection
 import ConfigParser
 import NaiveTrace
+import GerberWriter
 
 
 def ShowHelp():
@@ -23,8 +24,8 @@ Usage:
     -c --config     Specify the config file to be used for processing the image.
                     If none is specified, a default config will be used.
                     This argument is optional.
-    -m --method     <Dist/Blur/Blocky>
-                    Select which pixel selection processing method should be used.
+    -m --method     <Dist/Blur/Blocky/Pixel>
+                    Select which pixel selection and processing method should be used.
                     Defaults to Dist
     <image file>    The image file to process. This argument is reqired.
 """)
@@ -52,7 +53,7 @@ def GetOptions():
                 Error("-m must be followed by a method selection")
                 ShowHelp()
 
-            if not options["Method"] in ["Dist", "Blur", "Blocky"]:
+            if not options["Method"] in ["Dist", "Blur", "Blocky", "Pixel"]:
                 Error("Invalid method selection")
                 ShowHelp()
 
@@ -98,8 +99,14 @@ for i, proc in enumerate(config["Processes"]):
         img = ImageProcessing.GaussianBlur(img)
     plt.imsave(outPath+"_SelectedRegions.png", img)
 
-    lines = NaiveTrace.LineDetection(img)
-    NaiveTrace.PlotLines(lines)
+    if options["Method"] == "Pixel":
+        GerberWriter.GenerateBlocky(img, outPath)
+    else:
+        lines = NaiveTrace.LineDetection(img)
+        NaiveTrace.PlotLines(lines)
 
-    img_hough = ImageProcessing.LineDetection(img_edge)
-    plt.imsave(outPath+"_LineDetection.png", img_hough)
+        img_edge = ImageProcessing.EdgeDetection(img)
+        plt.imsave(outPath+"_EdgeDetection.png", img_edge)
+
+        img_hough = ImageProcessing.LineDetection(img_edge)
+        plt.imsave(outPath+"_LineDetection.png", img_hough)
