@@ -30,7 +30,7 @@ def GeneratePixelated(img, filename):
     file = CreateFile(filename)
     WriteHeader(file)
     file.write("%ADD10R,1X1*%") #Rectangle Object
-    file.write("D10*") #Use Rectangle Object
+    file.write("D10*\n") #Use Rectangle Object
 
     height, width = img.shape
 
@@ -38,7 +38,26 @@ def GeneratePixelated(img, filename):
     for y in range(height):
         for x in range(width):
             if img[y][x]:
-                file.write("X"+NumRepr(x)+"Y"+NumRepr(height-y)+"D03*\n")
+                file.write(F"X{NumRepr(x)}Y{NumRepr(height-y)}D03*\n")
         ProgressBar(y, 0, height-1)
     print()
+
+def GeneratePixelatedOctree(octree, filename, dim):
+    file = CreateFile(filename)
+    WriteHeader(file)
+
+    sizes = 0
+    depths = {}
+
+    for item in octree:
+        if not item[0] in depths:
+            depths |= {item[0]:10+sizes}
+            scale = dim[0]/(2**item[0])
+            file.write(F"%ADD{10+sizes}R,{scale:.6f}X{scale:.6f}*%\n") #Rectangle Object
+            sizes+=1
+
+    for item in octree:
+        file.write(F"D{depths[item[0]]}*\n") #Use Rectangle Object
+        file.write(F"X{NumRepr(item[1])}Y{NumRepr(dim[1]-item[2])}D03*\n")
+
 
