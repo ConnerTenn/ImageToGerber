@@ -52,12 +52,15 @@ def GeneratePixelatedOctree(octree, filename, dim):
     for item in octree:
         if not item[0] in depths:
             depths |= {item[0]:10+sizes}
-            scale = dim[0]/(2**item[0])
+            scale = min(dim)/(2**item[0])
             file.write(F"%ADD{10+sizes}R,{scale:.6f}X{scale:.6f}*%\n") #Rectangle Object
             sizes+=1
 
     for item in octree:
         file.write(F"D{depths[item[0]]}*\n") #Use Rectangle Object
-        file.write(F"X{NumRepr(item[1])}Y{NumRepr(dim[1]-item[2])}D03*\n")
+        s=min(dim)/(2**item[0])
+        x=item[1] + s/2
+        y=item[2] + s/2
+        file.write(F"X{NumRepr(x)}Y{NumRepr(dim[1]-y)}D03*\n")
 
 

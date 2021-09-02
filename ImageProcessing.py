@@ -105,39 +105,59 @@ def GaussianBlur(img):
 def GenerateOctree(img, offX=0, offY=0, scale=0):
 
     height, width = img.shape
+    if width*height==0:
+        return []
 
-    if height==1:
+    rects = []
+
+    # print("| "*scale, offX, offY)
+    # print(img)
+    # print()
+
+    if width != height:
+        extra = None
+        if width > height:
+            extra = GenerateOctree(img[    0:height, height:width], offX+height, offY+0,     scale+1)
+            width = height
+        if height > width:
+            extra = GenerateOctree(img[width:height,      0:width], offX,        offY+width, scale+1)
+            height = width
+        if extra==True:
+            rects+=[[scale, offX, offY]]
+        else:
+            rects += extra
+
+    elif width==1:
         if img[0,0]:
             return True
         else:
             return []
 
-    tl = GenerateOctree(img[       0:int(height/2),       0:int(width/2)], offX+0,       offY+0,        scale+1)
-    tr = GenerateOctree(img[       0:int(height/2), int(width/2):width  ], offX+width/2, offY+0,        scale+1)
-    bl = GenerateOctree(img[int(height/2):height  ,       0:int(width/2)], offX+0,       offY+height/2, scale+1)
-    br = GenerateOctree(img[int(height/2):height  , int(width/2):width  ], offX+width/2, offY+height/2, scale+1)
+    tl = GenerateOctree(img[            0:int(height/2),            0:int(width/2)], offX+0,            offY+0,             scale+1)
+    tr = GenerateOctree(img[            0:int(height/2), int(width/2):width       ], offX+int(width/2), offY+0,             scale+1)
+    bl = GenerateOctree(img[int(height/2):height       ,            0:int(width/2)], offX+0,            offY+int(height/2), scale+1)
+    br = GenerateOctree(img[int(height/2):height       , int(width/2):width       ], offX+int(width/2), offY+int(height/2), scale+1)
 
     if (tl==True and tr==True and bl==True and br==True):
         return True
     else:
-        rects = []
         if tl==True:
-            rects+=[[scale, offX, offY]]
+            rects+=[[scale+1, offX, offY]]
         else:
             rects+=tl
 
         if tr==True:
-            rects+=[[scale, offX+int(width/2), offY]]
+            rects+=[[scale+1, offX+int(width/2), offY]]
         else:
             rects+=tr
 
         if bl==True:
-            rects+=[[scale, offX, offY+int(height/2)]]
+            rects+=[[scale+1, offX, offY+int(height/2)]]
         else:
             rects+=bl
 
         if br==True:
-            rects+=[[scale, offX+int(width/2), offY+int(height/2)]]
+            rects+=[[scale+1, offX+int(width/2), offY+int(height/2)]]
         else:
             rects+=br
 
