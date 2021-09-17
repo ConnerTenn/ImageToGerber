@@ -109,8 +109,8 @@ def ConvertToCoords(lineIdx, pos, tl,tr,bl,br):
     if lineIdx == 4:
         return InterpolatePos(pos+[0,0], pos+[0,1], bl,tl)
 
-def GenerateLines(x,y, tl,tr,bl,br):
-    lines = []
+def GenerateSegments(x,y, tl,tr,bl,br):
+    segments = []
 
     pos = np.array([x,y])
     #Check each to see what line data matches the pixel pattern
@@ -125,8 +125,8 @@ def GenerateLines(x,y, tl,tr,bl,br):
                 p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
                 p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
 
-                lines += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
-    return lines
+                segments += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
+    return segments
 
 def LineDetection(img):
     shape = img.shape
@@ -135,7 +135,7 @@ def LineDetection(img):
     depth = 1
     if len(shape)==3: depth = shape[2]
 
-    lines = []
+    segments = []
 
     if depth>1:
         grayscaleImg = np.zeros((height, width))
@@ -169,12 +169,13 @@ def LineDetection(img):
             bl = piece[0][0]
             br = piece[0][1]
 
-            lines += GenerateLines(x,y, tl,tr,bl,br)
+            segments += GenerateSegments(x,y, tl,tr,bl,br)
 
         ProgressBar(y,0,height-1)
     print()
 
-    return lines
+    return segments
+
 
 
 def PlotLines(lines):
