@@ -104,8 +104,9 @@ for i, proc in enumerate(config["Processes"]):
     img = np.dot(img[...,:1], [1])
 
     if options["Method"] == "Pixel":
-        octree = ImageProcessing.GenerateOctree(img)
-        GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
+        GerberWriter.GeneratePixelatedLines(img, outPath)
+        # octree = ImageProcessing.GenerateOctree(img)
+        # GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
     else:
         lines = NaiveTrace.LineDetection(img)
         NaiveTrace.PlotLines(lines)
