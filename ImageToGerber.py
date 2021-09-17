@@ -25,7 +25,7 @@ Usage:
     -c --config     Specify the config file to be used for processing the image.
                     If none is specified, a default config will be used.
                     This argument is optional.
-    -m --method     <Dist/Blur/Blocky/Pixel>
+    -m --method     <Dist/Blur/Blocky>
                     Select which pixel selection and processing method should be used.
                     Defaults to Dist
     <image file>    The image file to process. This argument is reqired.
@@ -37,7 +37,7 @@ def GetOptions():
     argv = iter(sys.argv[1:])
     for arg in argv:
         #Help menu
-        if arg=="-h" or arg=="--helph":
+        if arg=="-h" or arg=="--help":
             ShowHelp()
         #Config file
         if arg=="-c" or arg=="--config":
@@ -54,7 +54,7 @@ def GetOptions():
                 Error("-m must be followed by a method selection")
                 ShowHelp()
 
-            if not options["Method"] in ["Dist", "Blur", "Blocky", "Pixel"]:
+            if not options["Method"] in ["Dist", "Blur", "Blocky"]:
                 Error("Invalid method selection")
                 ShowHelp()
 
@@ -103,16 +103,18 @@ for i, proc in enumerate(config["Processes"]):
     #Convert to scalar array (taking red channel only)
     img = np.dot(img[...,:1], [1])
 
-    if options["Method"] == "Pixel":
-        GerberWriter.GeneratePixelatedLines(img, outPath)
+    if proc["Method"] == "Fill":
+        GerberWriter.GeneratePixelatedFillLines(img, outPath)
         # octree = ImageProcessing.GenerateOctree(img)
         # GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
-    else:
+    elif proc["Method"] == "Trace":
         lines = NaiveTrace.LineDetection(img)
-        NaiveTrace.PlotLines(lines)
+        # NaiveTrace.PlotLines(lines)
 
-        img_edge = ImageProcessing.EdgeDetection(img)
-        plt.imsave(outPath+"_EdgeDetection.png", img_edge)
+        # img_edge = ImageProcessing.EdgeDetection(img)
+        # plt.imsave(outPath+"_EdgeDetection.png", img_edge)
 
-        img_hough = ImageProcessing.LineDetection(img_edge)
-        plt.imsave(outPath+"_LineDetection.png", img_hough)
+        # img_hough = ImageProcessing.LineDetection(img_edge)
+        # plt.imsave(outPath+"_LineDetection.png", img_hough)
+    else:
+        Error(F"Invalid process selected: {proc['Method']}")

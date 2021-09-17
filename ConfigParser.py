@@ -40,7 +40,7 @@ def ParseConfig(filename):
                 config["Processes"][-1]["Selections"] += [ParseSelection(line)]
             else:
                 config["Processes"] += [{}]
-                config["Processes"][-1] |= ParsePath(line)
+                config["Processes"][-1] |= ParseProcess(line)
                 config["Processes"][-1]["Selections"] = []
 
     # print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
@@ -50,6 +50,33 @@ def ParseConfig(filename):
 
     return config
 
+
+#Parse a new process
+def ParseProcess(line):
+    tokens = line.split(":")
+
+    #This line must contain 2 parts
+    if len(tokens) != 2:
+        Error("Malformed process line")
+
+    proc = {}
+    proc |= ParsePath(tokens[0].strip())
+
+    if tokens[1].count("[") != 1 or tokens[1].count("]") != 1 or "#" in tokens[1]:
+        Error("Invalid process config syntax")
+
+    config = tokens[1].strip()
+    config = config.replace("[", "#")
+    config = config.replace("]", "#")
+    tokens = config.split("#")
+
+    print(tokens)
+    if len(tokens) != 3:
+        Error("Invalid process config syntax")
+
+    proc["Type"] = tokens[0].strip()
+    proc["Method"] = tokens[1].strip()
+    return proc
 
 
 #Parse the file names at the beginning of a new section

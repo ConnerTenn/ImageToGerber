@@ -42,7 +42,7 @@ def GeneratePixelated(img, filename):
         ProgressBar(y, 0, height-1)
     print()
 
-def GeneratePixelatedLines(img, filename):
+def GeneratePixelatedFillLines(img, filename):
     file = CreateFile(filename)
     WriteHeader(file)
     height, width = img.shape
