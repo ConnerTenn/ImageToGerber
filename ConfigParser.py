@@ -70,12 +70,14 @@ def ParseProcess(line):
     config = config.replace("]", "#")
     tokens = config.split("#")
 
-    print(tokens)
-    if len(tokens) != 3:
+    if len(tokens) != 3 or len(tokens[2]):
         Error("Invalid process config syntax")
 
     proc["Type"] = tokens[0].strip()
     proc["Method"] = tokens[1].strip()
+
+    if not proc["Type"] in ["F_Cu", "B_Cu", "F_Mask", "B_Mask", "F_SilkS", "B_SilkS", "Edge_Cuts"]:
+        Error(F"Invalid gerber type: {proc['Type']}")
     return proc
 
 

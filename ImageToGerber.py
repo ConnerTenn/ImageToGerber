@@ -104,7 +104,7 @@ for i, proc in enumerate(config["Processes"]):
     img = np.dot(img[...,:1], [1])
 
     if proc["Method"] == "Fill":
-        GerberWriter.GeneratePixelatedFillLines(img, outPath)
+        GerberWriter.GeneratePixelatedFillLines(img, outPath, proc["Type"])
         # octree = ImageProcessing.GenerateOctree(img)
         # GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
     elif proc["Method"] == "Trace":
