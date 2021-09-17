@@ -42,6 +42,37 @@ def GeneratePixelated(img, filename):
         ProgressBar(y, 0, height-1)
     print()
 
+def GeneratePixelatedLines(img, filename):
+    file = CreateFile(filename)
+    WriteHeader(file)
+    height, width = img.shape
+
+    lines = 0
+    rectsize = 0
+
+    def DrawLine(x, rectsize):
+        file.write(F"%ADD{lines+10}R,{rectsize}X1*%\n") #Rectangle Object
+        file.write(F"D{lines+10}*\n") #Use Rectangle Object
+        file.write(F"X{NumRepr(x-rectsize/2)}Y{NumRepr(height-y+1/2)}D03*\n") #Place rectangle
+        lines+=1
+
+    print("> Writing Gerber")
+    for y in range(height):
+        for x in range(width):
+            if img[y][x]:
+                rectsize += 1
+            #Handle line
+            elif rectsize>0:
+                DrawLine(x, rectsize)
+                rectsize = 0
+        #Handle last line
+        if rectsize>0:
+            DrawLine(width-1, rectsize)
+            rectsize = 0
+        ProgressBar(y, 0, height-1)
+
+    print()
+
 def GeneratePixelatedOctree(octree, filename, dim):
     file = CreateFile(filename)
     WriteHeader(file)
