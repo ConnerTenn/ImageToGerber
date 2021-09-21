@@ -125,7 +125,7 @@ def GenerateSegments(x,y, tl,tr,bl,br):
                 p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
                 p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
 
-                segments += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
+                segments += [ [(p1[0], p1[1]), (p2[0], p2[1])] ]
     return segments
 
 def LineDetection(img):
@@ -245,7 +245,8 @@ def StitchSegments(segments):
 def PlotLines(lines):
     print("> Plotting Segments")
     for i, line in enumerate(lines):
-        line[1] = [-line[1][0], -line[1][1]]
+        #Convert to [ (x1, x2), (y1, y2) ] format
+        line = [ [line[0][0], line[1][0]], [-line[0][1], -line[1][1]] ]
         # plt.axline(line[0],line[1])
         plt.plot(line[0], line[1], color="k")
         ProgressBar(i,0,len(lines)-1)
