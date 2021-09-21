@@ -177,70 +177,52 @@ def LineDetection(img):
     return segments
 
 def StitchSegments(segments):
-    # segments = [
-    #     [(0,0), (1,1)],
-    #     [(5,20), (10,20)],
-    #     [(-1,1), (0,2)],
-    #     [(10,0), (20,0)],
-    #     [(1,1), (0,2)],
-    #     [(15,10), (10,0)],
-    #     [(-1,1), (0,0)],
-    #     [(20,0), (15,10)],
-    # ]
     lineloops = [[]]
 
     print("> Stiching Segments")
     startNumSeg = len(segments)
     i=0
-    noloop=True
-    loopStartIdx = -1
     while len(segments):
         lastloop = lineloops[-1]
         seg = segments[i]
 
         # Loop start
         if len(lastloop)==0:
-            print("Loop start")
-            lineloops[-1] += [ seg[0] ]
-            loopStartIdx = i
+            # print("Loop start")
+            lineloops[-1] += seg #Add both points to the loop
         #Loop end
         elif len(lastloop)>1 and lastloop[-1][0] == lastloop[0][0] and lastloop[-1][1] == lastloop[0][1]:
             # print("Loop complete")
             lineloops += [[]]
-            noloop = False
         # Connect with 1st part of seg
         elif lastloop[-1][0] == seg[0][0] and lastloop[-1][1] == seg[0][1]:
             lastloop += [ seg[1] ]
             del segments[i]
-            noloop = False
         # Connect with 2nd point of seg
         elif lastloop[-1][0] == seg[1][0] and lastloop[-1][1] == seg[1][1]:
             lastloop += [ seg[0] ]
             del segments[i]
-            noloop = False
         else:
             i+=1
-        # ProgressBar(startNumSeg-len(segments), 0, startNumSeg)
-        # print(F" {startNumSeg-len(segments)}/{startNumSeg}", end="")
+        ProgressBar(startNumSeg-len(segments), 0, startNumSeg)
 
+        #Loop around when reached the end of the segment list
         if i>=len(segments):
             i=0
-            if noloop:
-                print("Noloop")
-                for seg in segments:
-                    print(F"    {lastloop[-1]} :: {seg}")
-                lineloops += [[]]
-                del segments[loopStartIdx]
-            noloop=True
-        # print(lineloops)
-    print()
 
     print(F"Generated {len(lineloops)} loops")
-    for loop in lineloops:
-        print(loop)
 
     return lineloops
 
+def PlotLineLoops(lineloops):
+    lines = []
+    for loop in lineloops:
+        if len(loop):
+            lastpt = loop[0]
+            for point in loop[1:]:
+                lines += [ [lastpt, point] ]
+                lastpt = point
+    PlotLines(lines)
 
 def PlotLines(lines):
     print("> Plotting Segments")
