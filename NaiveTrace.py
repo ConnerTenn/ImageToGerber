@@ -109,8 +109,8 @@ def ConvertToCoords(lineIdx, pos, tl,tr,bl,br):
     if lineIdx == 4:
         return InterpolatePos(pos+[0,0], pos+[0,1], bl,tl)
 
-def GenerateLines(x,y, tl,tr,bl,br):
-    lines = []
+def GenerateSegments(x,y, tl,tr,bl,br):
+    segments = []
 
     pos = np.array([x,y])
     #Check each to see what line data matches the pixel pattern
@@ -125,8 +125,8 @@ def GenerateLines(x,y, tl,tr,bl,br):
                 p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
                 p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
 
-                lines += [ [(p1[0], p2[0]), (p1[1], p2[1])] ]
-    return lines
+                segments += [ [(p1[0], p1[1]), (p2[0], p2[1])] ]
+    return segments
 
 def LineDetection(img):
     shape = img.shape
@@ -135,7 +135,7 @@ def LineDetection(img):
     depth = 1
     if len(shape)==3: depth = shape[2]
 
-    lines = []
+    segments = []
 
     if depth>1:
         grayscaleImg = np.zeros((height, width))
@@ -169,18 +169,66 @@ def LineDetection(img):
             bl = piece[0][0]
             br = piece[0][1]
 
-            lines += GenerateLines(x,y, tl,tr,bl,br)
+            segments += GenerateSegments(x,y, tl,tr,bl,br)
 
         ProgressBar(y,0,height-1)
     print()
 
-    return lines
+    return segments
 
+def StitchSegments(segments):
+    lineloops = [[]]
+
+    print("> Stiching Segments")
+    startNumSeg = len(segments)
+    i=0
+    while len(segments):
+        lastloop = lineloops[-1]
+        seg = segments[i]
+
+        # Loop start
+        if len(lastloop)==0:
+            # print("Loop start")
+            lineloops[-1] += seg #Add both points to the loop
+        #Loop end
+        elif len(lastloop)>1 and lastloop[-1][0] == lastloop[0][0] and lastloop[-1][1] == lastloop[0][1]:
+            # print("Loop complete")
+            lineloops += [[]]
+        # Connect with 1st part of seg
+        elif lastloop[-1][0] == seg[0][0] and lastloop[-1][1] == seg[0][1]:
+            lastloop += [ seg[1] ]
+            del segments[i]
+        # Connect with 2nd point of seg
+        elif lastloop[-1][0] == seg[1][0] and lastloop[-1][1] == seg[1][1]:
+            lastloop += [ seg[0] ]
+            del segments[i]
+        else:
+            i+=1
+        ProgressBar(startNumSeg-len(segments), 0, startNumSeg)
+
+        #Loop around when reached the end of the segment list
+        if i>=len(segments):
+            i=0
+
+    print(F"Generated {len(lineloops)} loops")
+
+    return lineloops
+
+def PlotLineLoops(lineloops):
+    lines = []
+    for loop in lineloops:
+        if len(loop):
+            lastpt = loop[0]
+            for point in loop[1:]:
+                lines += [ [lastpt, point] ]
+                lastpt = point
+    PlotLines(lines)
 
 def PlotLines(lines):
     print("> Plotting Segments")
     for i, line in enumerate(lines):
-        line[1] = [-line[1][0], -line[1][1]]
+        #Convert to [ (x1, x2), (y1, y2) ] format
+        line = [ [line[0][0], line[1][0]], [-line[0][1], -line[1][1]] ]
         # plt.axline(line[0],line[1])
         plt.plot(line[0], line[1], color="k")
         ProgressBar(i,0,len(lines)-1)
