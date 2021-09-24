@@ -209,6 +209,7 @@ def StitchSegments(segments):
         #Loop around when reached the end of the segment list
         if i>=len(segments):
             i=0
+    print()
 
     print(F"Generated {len(lineloops)} loops")
 

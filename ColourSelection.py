@@ -12,6 +12,10 @@ def GetColourRepr(pixel):
 
     rgb = pixel[:3] #Slice off Alpha channel
 
+    #Convert rgb from 0->255 to 0->1
+    if len(rgb[rgb>1]):
+        rgb = rgb/255
+
     R,G,B=rgb
     V=0 #Value
     C=0 #Chroma
@@ -47,6 +51,11 @@ def GetColourReprNumpy(pixels):
     #https://en.wikipedia.org/wiki/HSL_and_HSV
 
     rgb = pixels[...,:3] #Slice off Alpha channel
+
+    #Convert rgb from 0->255 to 0->1
+    rgb[rgb[...,0]>1] = rgb[rgb[...,0]>1]/255
+    rgb[rgb[...,1]>1] = rgb[rgb[...,1]>1]/255
+    rgb[rgb[...,2]>1] = rgb[rgb[...,2]>1]/255
 
     # R,G,B=rgb
     R = rgb[...,0]
@@ -260,9 +269,11 @@ def SelectImageSections(imagefile, selections, method):
     #Convert to list of pixels, then pass to GetColourReprNumpy
     #Returns lists of each colourRepr
     colourRepr = GetColourReprNumpy(np.reshape(img,(-1,depth)))
+
+    newimg = np.zeros([height, width, 4])
     r=0
     i=0
-    for rows in img:
+    for rows in newimg:
         for pixel in rows:
             pixel[...] = selPixelFunc(colourRepr[...,i])
             i+=1
@@ -271,6 +282,6 @@ def SelectImageSections(imagefile, selections, method):
         ProgressBar(r, 0, height)
     print()
 
-    return img
+    return newimg
 
 
