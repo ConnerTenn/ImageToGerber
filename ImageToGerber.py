@@ -110,7 +110,8 @@ for i, proc in enumerate(config["Processes"]):
     elif proc["Method"] == "Trace":
         segments = NaiveTrace.LineDetection(img)
         lineloops = NaiveTrace.StitchSegments(segments)
-        NaiveTrace.PlotLineLoops(lineloops)
+        # NaiveTrace.PlotLineLoops(lineloops)
+        GerberWriter.GenerateTrace(lineloops, img.shape, outPath, proc["Type"])
 
         # img_edge = ImageProcessing.EdgeDetection(img)
         # plt.imsave(outPath+"_EdgeDetection.png", img_edge)

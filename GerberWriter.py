@@ -1,4 +1,6 @@
 
+#https://www.ucamco.com/en/guest/downloads/gerber-format
+
 from Global import *
 import numpy as np
 
@@ -123,4 +125,19 @@ def GeneratePixelatedOctree(octree, filename, dim):
         y=item[2] + s/2
         file.write(F"X{NumRepr(x)}Y{NumRepr(dim[1]-y)}D03*\n")
 
+
+def GenerateTrace(lineloops, dim, filename, gerberType):
+    file = CreateFile(filename, gerberType)
+    WriteHeader(file, gerberType)
+
+    height, width = dim
+
+    for loop in lineloops:
+        file.write("G36*\n")
+
+        file.write(F"X{NumRepr(loop[0][0])}Y{NumRepr(height-loop[0][1])}D02*\n")
+        for point in loop[1:]:
+            file.write(F"X{NumRepr(point[0])}Y{NumRepr(height-point[1])}D01*\n")
+
+        file.write("G37*\n")
 
