@@ -109,9 +109,10 @@ for i, proc in enumerate(config["Processes"]):
         # GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
     elif proc["Method"] == "Trace":
         segments = NaiveTrace.LineDetection(img)
-        lineloops = NaiveTrace.StitchSegments(segments)
+        GerberWriter.GenerateTraceFromSegments(segments, img.shape, outPath, proc["Type"])
+        # lineloops = NaiveTrace.StitchSegments(segments)
         # NaiveTrace.PlotLineLoops(lineloops)
-        GerberWriter.GenerateTrace(lineloops, img.shape, outPath, proc["Type"])
+        # GerberWriter.GenerateTrace(lineloops, img.shape, outPath, proc["Type"])
 
         # img_edge = ImageProcessing.EdgeDetection(img)
         # plt.imsave(outPath+"_EdgeDetection.png", img_edge)
