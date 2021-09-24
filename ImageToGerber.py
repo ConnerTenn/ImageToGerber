@@ -84,7 +84,7 @@ for i, proc in enumerate(config["Processes"]):
     print()
     print(F"{TERM_BLUE}=== Processing {i} ==={TERM_RESET}")
     outPath = proc["Path"]
-    print(F"{TERM_WHITE}>> {outPath}{TERM_RESET}")
+    print(F"{TERM_WHITE}>> {outPath}-{proc['Type']}{TERM_RESET}")
     print()
 
     splitPath = outPath.rpartition("/")
@@ -98,7 +98,7 @@ for i, proc in enumerate(config["Processes"]):
     img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"], options["Method"])
     if options["Method"] == "Blur":
         img = ImageProcessing.GaussianBlur(img)
-    plt.imsave(outPath+"_SelectedRegions.png", img)
+    plt.imsave(F"{outPath}_SelectedRegions-{proc['Type']}.png", img)
 
     #Convert to scalar array (taking red channel only)
     img = np.dot(img[...,:1], [1])

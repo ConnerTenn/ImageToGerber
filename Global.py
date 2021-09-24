@@ -1,5 +1,6 @@
 
 import sys
+import time
 
 TERM_RESET =   "\033[m"
 TERM_RED =     "\033[1;31m"
@@ -55,7 +56,13 @@ def ProgressBar(val, minimum, maximum):
     progress = (val-minimum)/maximum
     numbars = int(barSize*progress)
     bars = "="*numbars + " "*(barSize-numbars)
-    print(F"\033[1G[{bars}] {100*progress:.1f}%",end="", flush=True)
+    print(F"\033[1G[{bars}] {100*progress:5.1f}%", end="", flush=True)
+
+def TimeDisplay(ts):
+    elapsed = time.time()-ts
+    seconds = elapsed%60
+    minutes = int(elapsed/60)
+    print(F"   Elapsed time: {minutes:02d}m {seconds:05.2f}s", end="", flush=True)
 
 
 def Sigmoid(x):

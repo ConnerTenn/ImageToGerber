@@ -85,6 +85,7 @@ def GeneratePixelatedFillLines(img, filename, gerberType):
         file.write(F"X{NumRepr(x-rectsize/2)}Y{NumRepr(height-y+1/2)}D03*\n") #Place rectangle
 
     print("> Writing Gerber")
+    ts=time.time()
     for y in range(height):
         for x in range(width):
             if img[y][x]:
@@ -100,6 +101,7 @@ def GeneratePixelatedFillLines(img, filename, gerberType):
             rectsize = 0
             lines+=1
         ProgressBar(y, 0, height-1)
+        TimeDisplay(ts)
 
     print()
     FinishFile(file)
@@ -157,11 +159,15 @@ def GenerateTraceFromSegments(segments, dim, filename, gerberType):
 
     height, width = dim
 
-    for line in segments:
+    print("> Writing Gerber")
+    ts=time.time()
+    for i, line in enumerate(segments):
         file.write(F"X{NumRepr(line[0][0])}Y{NumRepr(height-line[0][1])}D02*\n")
         file.write(F"X{NumRepr(line[1][0])}Y{NumRepr(height-line[1][1])}D01*\n")
-
+        ProgressBar(i, 0, len(segments)-1)
+        TimeDisplay(ts)
     print()
+
     FinishFile(file)
 
 

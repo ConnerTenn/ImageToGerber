@@ -159,6 +159,7 @@ def LineDetection(img):
 
 
     print("> Tracing outline")
+    ts=time.time()
     for y in range(height):
         for x in range(width):
             piece = np.resize(img[y:y+2, x:x+2], (2,2))
@@ -172,6 +173,7 @@ def LineDetection(img):
             segments += GenerateSegments(x,y, tl,tr,bl,br)
 
         ProgressBar(y,0,height-1)
+        TimeDisplay(ts)
     print()
 
     return segments
@@ -182,6 +184,7 @@ def StitchSegments(segments):
     print("> Stiching Segments")
     startNumSeg = len(segments)
     i=0
+    ts=time.time()
     while len(segments):
         lastloop = lineloops[-1]
         seg = segments[i]
@@ -206,6 +209,7 @@ def StitchSegments(segments):
         else:
             i+=1
         ProgressBar(startNumSeg-len(segments), 0, startNumSeg)
+        TimeDisplay(ts)
 
         #Loop around when reached the end of the segment list
         if i>=len(segments):
@@ -228,12 +232,14 @@ def PlotLineLoops(lineloops):
 
 def PlotLines(lines):
     print("> Plotting Segments")
+    ts=time.time()
     for i, line in enumerate(lines):
         #Convert to [ (x1, x2), (y1, y2) ] format
         line = [ [line[0][0], line[1][0]], [-line[0][1], -line[1][1]] ]
         # plt.axline(line[0],line[1])
         plt.plot(line[0], line[1], color="k")
         ProgressBar(i,0,len(lines)-1)
+        TimeDisplay(ts)
     print()
     # plt.xticks([])
     # plt.yticks([])

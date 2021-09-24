@@ -273,6 +273,7 @@ def SelectImageSections(imagefile, selections, method):
     newimg = np.zeros([height, width, 4])
     r=0
     i=0
+    ts=time.time()
     for rows in newimg:
         for pixel in rows:
             pixel[...] = selPixelFunc(colourRepr[...,i])
@@ -280,6 +281,7 @@ def SelectImageSections(imagefile, selections, method):
         r+=1
         # print(F"\033[A{(r/height)*100:.2f}%")
         ProgressBar(r, 0, height)
+        TimeDisplay(ts)
     print()
 
     return newimg
