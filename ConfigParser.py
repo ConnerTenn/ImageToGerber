@@ -210,16 +210,16 @@ def ParseTolerance(tolerance):
 
             #Find the neg specifier
             if tolerance.find("-")!=-1:
-                minusIdx = tolerance.find("+")
+                minusIdx = tolerance.find("-")
                 percentIdx = tolerance.find("%",minusIdx+1) #Make sure to find the '%' immediately following
                 if percentIdx==-1:
                     Error("Malformed tolerance specifier")
                 #Convert to float
-                tolPos = float(tolerance[minusIdx+1:percentIdx])/100
+                tolNeg = float(tolerance[minusIdx+1:percentIdx])/100
         except:
             Error("Failed to parse tolerances")
         
-    print(F"    Tolerance +{tolPos}% -{tolNeg}%")
+    print(F"    Tolerance +{tolPos*100}% -{tolNeg*100}%")
 
     return {"Tol+":tolPos, "Tol-":tolNeg}
 

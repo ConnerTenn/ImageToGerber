@@ -1,4 +1,6 @@
 
+#https://www.ucamco.com/en/guest/downloads/gerber-format
+
 from Global import *
 import numpy as np
 
@@ -122,5 +124,44 @@ def GeneratePixelatedOctree(octree, filename, dim):
         x=item[1] + s/2
         y=item[2] + s/2
         file.write(F"X{NumRepr(x)}Y{NumRepr(dim[1]-y)}D03*\n")
+
+
+def GenerateTraceFromLoops(lineloops, dim, filename, gerberType):
+    file = CreateFile(filename, gerberType)
+    WriteHeader(file, gerberType)
+
+    file.write("G01*\n") #Linear interpolation mode
+    # file.write("%TA.AperFunction,Profile*%")
+    file.write("%ADD10C,0.200000*%") #Circle aperture
+    # file.write("%TD*%")
+    file.write("D10*") #Use aperture
+
+    height, width = dim
+
+    for loop in lineloops:
+        file.write(F"X{NumRepr(loop[0][0])}Y{NumRepr(height-loop[0][1])}D02*\n")
+        for point in loop[1:]:
+            file.write(F"X{NumRepr(point[0])}Y{NumRepr(height-point[1])}D01*\n")
+    print()
+    FinishFile(file)
+
+def GenerateTraceFromSegments(segments, dim, filename, gerberType):
+    file = CreateFile(filename, gerberType)
+    WriteHeader(file, gerberType)
+
+    file.write("G01*\n") #Linear interpolation mode
+    # file.write("%TA.AperFunction,Profile*%")
+    file.write("%ADD10C,0.200000*%") #Circle aperture
+    # file.write("%TD*%")
+    file.write("D10*") #Use aperture
+
+    height, width = dim
+
+    for line in segments:
+        file.write(F"X{NumRepr(line[0][0])}Y{NumRepr(height-line[0][1])}D02*\n")
+        file.write(F"X{NumRepr(line[1][0])}Y{NumRepr(height-line[1][1])}D01*\n")
+
+    print()
+    FinishFile(file)
 
 

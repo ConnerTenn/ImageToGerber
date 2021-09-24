@@ -190,8 +190,9 @@ def StitchSegments(segments):
         if len(lastloop)==0:
             # print("Loop start")
             lineloops[-1] += seg #Add both points to the loop
+            del segments[i]
         #Loop end
-        elif len(lastloop)>1 and lastloop[-1][0] == lastloop[0][0] and lastloop[-1][1] == lastloop[0][1]:
+        elif len(lastloop)>2 and lastloop[-1][0] == lastloop[0][0] and lastloop[-1][1] == lastloop[0][1]:
             # print("Loop complete")
             lineloops += [[]]
         # Connect with 1st part of seg
@@ -209,6 +210,7 @@ def StitchSegments(segments):
         #Loop around when reached the end of the segment list
         if i>=len(segments):
             i=0
+    print()
 
     print(F"Generated {len(lineloops)} loops")
 
