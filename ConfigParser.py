@@ -21,7 +21,7 @@ ParseConfig
 #Parse the config file
 def ParseConfig(filename):
     print(F"{TERM_BLUE}=== Parsing Config ==={TERM_RESET}")
-    config={"Processes":[]}
+    config={"Processes":[], "Options":{}}
 
     cfgfile=None
     try:
@@ -38,17 +38,46 @@ def ParseConfig(filename):
             if line[0].isspace():
                 line = line.strip()
                 config["Processes"][-1]["Selections"] += [ParseSelection(line)]
-            else:
+            elif line[0] == "\"":
                 config["Processes"] += [{}]
                 config["Processes"][-1] |= ParseProcess(line)
                 config["Processes"][-1]["Selections"] = []
+            elif line.count("=") == 1:
+                key, value = ParseOption(line)
+                config["Options"][key] = value
+            else:
+                Error("Unrecognized config line")
 
     # print(F"{TERM_GREEN}Config Dump{TERM_RESET}")
 
     # print(config)
     # PrintDict(config)
 
+    if not ("Width" in config["Options"] or "Height" in config["Options"]):
+        Error("At least 1 board dimension must be specified")
+
     return config
+
+
+#Parse an option line
+def ParseOption(line):
+    key, value = line.split("=")
+    key = key.strip()
+    value = value.strip()
+
+    if key in ["Width", "Height"]:
+        mm = value.find("mm")
+        if mm==-1:
+            Error("Incorrect dimension format")
+
+        try:
+            value = float(value[:mm])
+        except:
+            Error("Could not parse dimension value")
+    else:
+        Error(F"Unrecognized config option \"{key}\"")
+
+    return key, value
 
 
 #Parse a new process
@@ -222,5 +251,4 @@ def ParseTolerance(tolerance):
     print(F"    Tolerance +{tolPos*100}% -{tolNeg*100}%")
 
     return {"Tol+":tolPos, "Tol-":tolNeg}
-
 
