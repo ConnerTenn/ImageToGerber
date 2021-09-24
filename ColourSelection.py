@@ -251,11 +251,8 @@ def SelectPixelDist(colourRepr):
     return [selectionDist]*3 +[1]
 
 
-def SelectImageSections(imagefile, selections, method):
+def SelectImageSections(img, selections, method):
     global Selections
-    img = plt.imread(imagefile)
-    img = img
-
     height, width, depth = img.shape
 
     Selections = selections
@@ -264,7 +261,6 @@ def SelectImageSections(imagefile, selections, method):
     if method == "Dist":
         selPixelFunc = SelectPixelDist
 
-    print(F"Image Resolution: {width}x{height} [{depth}]")
     print("> Selecting Colours")
     #Convert to list of pixels, then pass to GetColourReprNumpy
     #Returns lists of each colourRepr

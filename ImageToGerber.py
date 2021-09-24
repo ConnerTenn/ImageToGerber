@@ -75,10 +75,37 @@ config = None
 if "ConfigFilename" in options:
     config = ConfigParser.ParseConfig(options["ConfigFilename"])
 
+
+srcimg=None
 try:
-    img = plt.imread(options["ImageFilename"])
+    srcimg = plt.imread(options["ImageFilename"])
 except:
     Error("Failed to open Image")
+
+dim = srcimg.shape
+imgDim = Object()
+imgDim.Width=dim[1]
+imgDim.Height=dim[0]
+imgDim.Depth=dim[2]
+print(F"Image Resolution: {imgDim.Width}x{imgDim.Height} [{imgDim.Depth}]")
+
+gerberDim = Object()
+gerberDim.Width=None
+gerberDim.Height=None
+if "Width" in config["Options"]:
+    gerberDim.Width = config["Options"]["Width"]
+if "Height" in config["Options"]:
+    gerberDim.Height = config["Options"]["Height"]
+
+if gerberDim.Width==None:
+    gerberDim.Width = imgDim.Width*gerberDim.Height/imgDim.Height
+elif gerberDim.Height==None:
+    gerberDim.Height = imgDim.Height*gerberDim.Width/imgDim.Width
+else:
+    if abs(gerberDim.Width/imgDim.Width - gerberDim.Height/imgDim.Height) > 0.01:
+        Error("Specified gerber aspect ratio does not match image aspect ratio")
+
+
 
 for i, proc in enumerate(config["Processes"]):
     print()
@@ -95,7 +122,7 @@ for i, proc in enumerate(config["Processes"]):
         if not os.path.isdir(directory):
             os.mkdir(directory)
 
-    img = ColourSelection.SelectImageSections(options["ImageFilename"], proc["Selections"], options["Method"])
+    img = ColourSelection.SelectImageSections(srcimg, proc["Selections"], options["Method"])
     if options["Method"] == "Blur":
         img = ImageProcessing.GaussianBlur(img)
     plt.imsave(F"{outPath}_SelectedRegions-{proc['Type']}.png", img)
@@ -104,12 +131,12 @@ for i, proc in enumerate(config["Processes"]):
     img = np.dot(img[...,:1], [1])
 
     if proc["Method"] == "Fill":
-        GerberWriter.GeneratePixelatedFillLines(img, outPath, proc["Type"])
+        GerberWriter.GeneratePixelatedFillLines(img, gerberDim, outPath, proc["Type"])
         # octree = ImageProcessing.GenerateOctree(img)
         # GerberWriter.GeneratePixelatedOctree(octree, outPath, img.shape)
     elif proc["Method"] == "Trace":
         segments = NaiveTrace.LineDetection(img)
-        GerberWriter.GenerateTraceFromSegments(segments, img.shape, outPath, proc["Type"])
+        GerberWriter.GenerateTraceFromSegments(segments, imgDim, gerberDim, outPath, proc["Type"])
         # lineloops = NaiveTrace.StitchSegments(segments)
         # NaiveTrace.PlotLineLoops(lineloops)
         # GerberWriter.GenerateTrace(lineloops, img.shape, outPath, proc["Type"])

@@ -70,3 +70,7 @@ def Sigmoid(x):
 
 def Norm(x, factor):
     return 2**(-factor*(x**2))
+
+
+class Object():
+    pass

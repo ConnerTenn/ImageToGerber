@@ -71,18 +71,20 @@ def GeneratePixelated(img, filename):
         ProgressBar(y, 0, height-1)
     print()
 
-def GeneratePixelatedFillLines(img, filename, gerberType):
+def GeneratePixelatedFillLines(img, gerberDim, filename, gerberType):
     file = CreateFile(filename, gerberType)
     WriteHeader(file, gerberType)
     height, width = img.shape
+    scaleWidth = gerberDim.Width/width
+    scaleHeight = gerberDim.Height/height
 
     lines = 0
     rectsize = 0
 
     def DrawLine(x, rectsize, line):
-        file.write(F"%ADD{line+10}R,{rectsize}X1*%\n") #Rectangle Object
+        file.write(F"%ADD{line+10}R,{scaleWidth*rectsize}X{scaleHeight}*%\n") #Rectangle Object
         file.write(F"D{line+10}*\n") #Use Rectangle Object
-        file.write(F"X{NumRepr(x-rectsize/2)}Y{NumRepr(height-y+1/2)}D03*\n") #Place rectangle
+        file.write(F"X{NumRepr(scaleWidth*(x-rectsize/2))}Y{NumRepr(scaleHeight*(height-y+1/2))}D03*\n") #Place rectangle
 
     print("> Writing Gerber")
     ts=time.time()
@@ -147,9 +149,12 @@ def GenerateTraceFromLoops(lineloops, dim, filename, gerberType):
     print()
     FinishFile(file)
 
-def GenerateTraceFromSegments(segments, dim, filename, gerberType):
+def GenerateTraceFromSegments(segments, imgDim, gerberDim, filename, gerberType):
     file = CreateFile(filename, gerberType)
     WriteHeader(file, gerberType)
+
+    scaleWidth = gerberDim.Width/imgDim.Width
+    scaleHeight = gerberDim.Height/imgDim.Height
 
     file.write("G01*\n") #Linear interpolation mode
     # file.write("%TA.AperFunction,Profile*%")
@@ -157,13 +162,11 @@ def GenerateTraceFromSegments(segments, dim, filename, gerberType):
     # file.write("%TD*%")
     file.write("D10*") #Use aperture
 
-    height, width = dim
-
     print("> Writing Gerber")
     ts=time.time()
     for i, line in enumerate(segments):
-        file.write(F"X{NumRepr(line[0][0])}Y{NumRepr(height-line[0][1])}D02*\n")
-        file.write(F"X{NumRepr(line[1][0])}Y{NumRepr(height-line[1][1])}D01*\n")
+        file.write(F"X{NumRepr(scaleWidth*line[0][0])}Y{NumRepr(scaleHeight*(imgDim.Height-line[0][1]))}D02*\n")
+        file.write(F"X{NumRepr(scaleWidth*line[1][0])}Y{NumRepr(scaleHeight*(imgDim.Height-line[1][1]))}D01*\n")
         ProgressBar(i, 0, len(segments)-1)
         TimeDisplay(ts)
     print()
