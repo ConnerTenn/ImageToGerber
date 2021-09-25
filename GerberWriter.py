@@ -82,7 +82,7 @@ def GeneratePixelatedFillLines(img, gerberDim, filename, gerberType):
     rectsize = 0
 
     def DrawLine(x, rectsize, line):
-        file.write(F"%ADD{line+10}R,{scaleWidth*rectsize}X{scaleHeight}*%\n") #Rectangle Object
+        file.write(F"%ADD{line+10}R,{scaleWidth*rectsize:.6f}X{scaleHeight:.6f}*%\n") #Rectangle Object
         file.write(F"D{line+10}*\n") #Use Rectangle Object
         file.write(F"X{NumRepr(scaleWidth*(x-rectsize/2))}Y{NumRepr(scaleHeight*(height-y+1/2))}D03*\n") #Place rectangle
 
