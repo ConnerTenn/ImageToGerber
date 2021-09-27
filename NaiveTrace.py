@@ -112,21 +112,24 @@ def ConvertToCoords(lineIdx, pos, tl,tr,bl,br):
 def GenerateSegments(x,y, tl,tr,bl,br):
     segments = []
 
-    pos = np.array([x,y])
-    #Check each to see what line data matches the pixel pattern
-    for dat in LineData:
-        kernel = dat["Kernel"]
+    #Check if any work has to be done for this selection
+    if not ((tl>=0.5) == (tr>=0.5) == (bl>=0.5) == (br>=0.5)):
+        pos = np.array([x,y])
+        #Check each to see what line data matches the pixel pattern
+        for dat in LineData:
+            kernel = dat["Kernel"]
 
-        #Check to see if the pixel pattern matches
-        if (kernel[0] == (tl>=0.5) and kernel[1] == (tr>=0.5) and kernel[2] == (bl>=0.5) and kernel[3] == (br>=0.5)):
+            #Check to see if the pixel pattern matches
+            if (kernel[0] == (tl>=0.5) and kernel[1] == (tr>=0.5) and kernel[2] == (bl>=0.5) and kernel[3] == (br>=0.5)):
 
-            #Generate a line for each segment in the pixel pattern
-            for seg in dat["Segments"]:
-                p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
-                p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
+                #Generate a line for each segment in the pixel pattern
+                for seg in dat["Segments"]:
+                    p1 = ConvertToCoords(seg[0], pos, tl,tr,bl,br)
+                    p2 = ConvertToCoords(seg[1], pos, tl,tr,bl,br)
 
-                segments += [ [(p1[0], p1[1]), (p2[0], p2[1])] ]
-    return segments
+                    segments += [ [(p1[0], p1[1]), (p2[0], p2[1])] ]
+                return segments
+    return []
 
 def LineDetection(img):
     shape = img.shape
