@@ -164,6 +164,22 @@ def GenerateOctree(img, offX=0, offY=0, scale=0):
         return rects
 
 
+def CenterOfMass(img):
+    avgx = 0
+    avgy = 0
+    count = 0
+    for y, rows in enumerate(img):
+        for x, pixel in enumerate(rows):
+            if pixel:
+                avgx+=x
+                avgy+=y
+                count+=1
+    if count==0:
+        shape = img.shape
+        return [shape[1]/2, shape[0]/2]
+    avgx = avgx/count
+    avgy = avgy/count
+    return [avgx, avgy]
 
 
 

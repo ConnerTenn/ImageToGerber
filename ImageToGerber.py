@@ -130,6 +130,9 @@ for i, proc in enumerate(config["Processes"]):
     #Convert to scalar array (taking red channel only)
     img = np.dot(img[...,:1], [1])
 
+    center = ImageProcessing.CenterOfMass(img)
+    print(F"Center of Mass:  X:{center[0]:.1f} Y:{center[1]:.1f}")
+
     if proc["Method"] == "Fill":
         GerberWriter.GeneratePixelatedFillLines(img, gerberDim, outPath, proc["Type"])
         # octree = ImageProcessing.GenerateOctree(img)
