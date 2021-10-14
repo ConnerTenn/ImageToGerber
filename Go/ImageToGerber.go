@@ -60,4 +60,6 @@ func main() {
 		os.Exit(-1)
 	}
 	fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
+
+	SelectColors(img)
 }
