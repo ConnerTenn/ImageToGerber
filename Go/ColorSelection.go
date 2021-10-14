@@ -1,11 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"image"
 	"image/color"
-	"image/png"
 	"math"
-	"os"
 )
 
 type Condition struct {
@@ -93,7 +92,6 @@ func TestTolWrap(value float64, target float64, tolPos float64, tolNeg float64) 
 
 func SelectPixel(pixel color.Color) bool {
 	repr := GetColourRepr(pixel)
-	_ = repr
 
 	var selection []Rule = []Rule{
 		{
@@ -145,19 +143,48 @@ func SelectPixel(pixel color.Color) bool {
 	return passRules
 }
 
-func SelectColors(img image.Image) {
-	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
-
-	for y := 0; y < img.Bounds().Max.Y; y++ {
-		for x := 0; x < img.Bounds().Max.X; x++ {
-			if SelectPixel(img.At(x, y)) {
-				newimg.Set(x, y, color.White)
-			} else {
-				newimg.Set(x, y, color.Black)
+func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan bool) {
+	for true {
+		y, more := <-yidx
+		if more {
+			for x := 0; x < img.Bounds().Max.X; x++ {
+				if SelectPixel(img.At(x, y)) {
+					newimg.Set(x, y, color.White)
+				} else {
+					newimg.Set(x, y, color.Black)
+				}
 			}
+		} else {
+			done <- true
+			return
 		}
 	}
+}
 
-	ofile, _ := os.Create("Out.png")
-	png.Encode(ofile, newimg)
+func SelectColors(img image.Image) *image.RGBA {
+	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
+
+	yidx := make(chan int, img.Bounds().Dx()*img.Bounds().Dy())
+	done := make(chan bool)
+
+	numThreads := 10
+
+	for i := 0; i < numThreads; i++ {
+		go SelectRow(img, yidx, newimg, done)
+	}
+
+	fmt.Println("Selecting Colors")
+	go func() {
+		for y := 0; y < img.Bounds().Max.Y; y++ {
+			yidx <- y
+		}
+		close(yidx)
+	}()
+
+	for i := 0; i < numThreads; i++ {
+		<-done
+	}
+	fmt.Println("Done Selecting Colors")
+
+	return newimg
 }

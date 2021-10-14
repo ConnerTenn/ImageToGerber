@@ -61,5 +61,8 @@ func main() {
 	}
 	fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
 
-	SelectColors(img)
+	newimg := SelectColors(img)
+	ofile, _ := os.Create("Out.png")
+	png.Encode(ofile, newimg)
+	ofile.Close()
 }
