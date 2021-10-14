@@ -47,6 +47,8 @@ func main() {
 		}
 	}
 
+	ParseConfig(options.ConfigFileName)
+
 	file, err := os.Open(options.ImageFilename)
 	defer file.Close()
 	if err != nil {
