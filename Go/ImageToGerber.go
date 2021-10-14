@@ -32,6 +32,8 @@ func ShowHelp() {
 
 func main() {
 	options := Options{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
+
+	//Options parsing
 	for i := 0; i < len(os.Args); i++ {
 		arg := os.Args[i]
 		if arg == "-h" || arg == "--help" {
@@ -47,24 +49,23 @@ func main() {
 		}
 	}
 
+	//Parse Config
 	ParseConfig(options.ConfigFileName)
 
+	//Open Image
 	file, err := os.Open(options.ImageFilename)
-	defer file.Close()
-	if err != nil {
-		// fmt.Println("Failed to open image \"" + options.ImageFilename + "\"")
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	CheckError(err)
 	img, err := png.Decode(file)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(-1)
-	}
+	CheckError(err)
+
 	fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
 
+	//Select Config
 	newimg := SelectColors(img)
-	ofile, _ := os.Create("Out.png")
+
+	//Debug output
+	ofile, err := os.Create("Out.png")
+	CheckError(err)
 	png.Encode(ofile, newimg)
 	ofile.Close()
 }

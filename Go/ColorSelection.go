@@ -93,6 +93,7 @@ func TestTolWrap(value float64, target float64, tolPos float64, tolNeg float64) 
 func SelectPixel(pixel color.Color) bool {
 	repr := GetColourRepr(pixel)
 
+	//Placeholder for debugging
 	var selection []Rule = []Rule{
 		{
 			Cond: []Condition{
@@ -145,8 +146,11 @@ func SelectPixel(pixel color.Color) bool {
 
 func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan bool) {
 	for true {
+		//Get next job
 		y, more := <-yidx
+
 		if more {
+			//Process Job
 			for x := 0; x < img.Bounds().Max.X; x++ {
 				if SelectPixel(img.At(x, y)) {
 					newimg.Set(x, y, color.White)
@@ -155,6 +159,7 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 				}
 			}
 		} else {
+			//No more jobs
 			done <- true
 			return
 		}
@@ -162,6 +167,7 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 }
 
 func SelectColors(img image.Image) *image.RGBA {
+	//New image for selection
 	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
 
 	yidx := make(chan int, img.Bounds().Dx()*img.Bounds().Dy())
@@ -169,22 +175,24 @@ func SelectColors(img image.Image) *image.RGBA {
 
 	numThreads := 10
 
+	fmt.Println(TERM_BLUE + "== Selecting Colors ==" + TERM_RESET)
+
+	//Spawn threads
 	for i := 0; i < numThreads; i++ {
 		go SelectRow(img, yidx, newimg, done)
 	}
 
-	fmt.Println("Selecting Colors")
-	go func() {
-		for y := 0; y < img.Bounds().Max.Y; y++ {
-			yidx <- y
-		}
-		close(yidx)
-	}()
+	//Queue Jobs
+	for y := 0; y < img.Bounds().Max.Y; y++ {
+		yidx <- y
+	}
+	close(yidx)
 
+	//Wait for all jobs to complete
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
-	fmt.Println("Done Selecting Colors")
+	fmt.Println(TERM_GREY + "== Done Selecting Colors ==" + TERM_RESET)
 
 	return newimg
 }
