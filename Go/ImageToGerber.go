@@ -64,13 +64,19 @@ func main() {
 		newimg := SelectColors(img, &process.Selection)
 
 		//Debug output
-		directory := process.Outfile[:strings.LastIndex(process.Outfile, "/")]
-		if len(directory) > 0 {
-			os.MkdirAll(directory, 0755)
-		}
-		ofile, err := os.Create(process.Outfile + ".png")
+		ofile := CreateFile(process.Outfile + ".png")
 		CheckError(err)
 		png.Encode(ofile, newimg)
 		ofile.Close()
+
+		for _, gerbertype := range process.Types {
+			boardWidth := process.BoardWidth
+			boardHeight := 0.0
+			if gerbertype == "Edge_Cuts" {
+				GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype)
+			} else {
+				GenerateGerberFillLines(newimg, boardWidth, boardHeight, process.Outfile, gerbertype)
+			}
+		}
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 var (
@@ -22,4 +23,14 @@ func CheckError(err interface{}) {
 		fmt.Println(TERM_RED+"Error:"+TERM_RESET, err)
 		os.Exit(-1)
 	}
+}
+
+func CreateFile(filepath string) *os.File {
+	directory := filepath[:strings.LastIndex(filepath, "/")]
+	if len(directory) > 0 {
+		os.MkdirAll(directory, 0755)
+	}
+	oFile, err := os.Create(filepath)
+	CheckError(err)
+	return oFile
 }

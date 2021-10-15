@@ -171,7 +171,7 @@ func LineDetection(img image.Image) []Segment {
 			segments = append(segments, GenerateSegments(Point{float64(x), float64(y)}, tl, tr, bl, br)...)
 		}
 	}
-	fmt.Println(TERM_BLUE + "== Done Tracing outline" + TERM_RESET)
+	fmt.Println(TERM_GREY + "== Done Tracing outline" + TERM_RESET)
 
 	return segments
 }
