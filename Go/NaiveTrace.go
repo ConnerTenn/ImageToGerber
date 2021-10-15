@@ -21,8 +21,8 @@ type Point struct {
 }
 
 type Segment struct {
-	X Point
-	Y Point
+	P1 Point
+	P2 Point
 }
 
 type LineKernel struct {

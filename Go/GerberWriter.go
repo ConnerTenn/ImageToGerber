@@ -24,36 +24,36 @@ func WriteHeader(file *os.File, gerberType string) {
 	file.Write([]byte("%%TF.SameCoordinates,Original*%\n"))
 	if gerberType == "F_Cu" {
 		// Front Copper
-		file.Write([]byte("%%TF.FileFunction,Copper,L1,Top*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Positive*%\n"))
+		file.Write([]byte("%TF.FileFunction,Copper,L1,Top*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Positive*%\n"))
 	} else if gerberType == "B_Cu" {
 		// Back Copper
-		file.Write([]byte("%%TF.FileFunction,Copper,L2,Bot*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Positive*%\n"))
+		file.Write([]byte("%TF.FileFunction,Copper,L2,Bot*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Positive*%\n"))
 	} else if gerberType == "F_Mask" {
 		// Front Solder Mask
-		file.Write([]byte("%%TF.FileFunction,Soldermask,Top*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Negative*%\n"))
+		file.Write([]byte("%TF.FileFunction,Soldermask,Top*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Negative*%\n"))
 	} else if gerberType == "B_Mask" {
 		// Back Solder Mask
-		file.Write([]byte("%%TF.FileFunction,Soldermask,Bot*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Negative*%\n"))
+		file.Write([]byte("%TF.FileFunction,Soldermask,Bot*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Negative*%\n"))
 	} else if gerberType == "F_SilkS" {
 		// Front Silk screen
-		file.Write([]byte("%%TF.FileFunction,Legend,Top*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Positive*%\n"))
+		file.Write([]byte("%TF.FileFunction,Legend,Top*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Positive*%\n"))
 	} else if gerberType == "B_SilkS" {
 		// Back Silk screen
-		file.Write([]byte("%%TF.FileFunction,Legend,Bot*%\n"))
-		file.Write([]byte("%%TF.FilePolarity,Positive*%\n"))
+		file.Write([]byte("%TF.FileFunction,Legend,Bot*%\n"))
+		file.Write([]byte("%TF.FilePolarity,Positive*%\n"))
 	} else if gerberType == "Edge_Cuts" {
 		// Edge Cuts
 		file.Write([]byte("%%TF.FileFunction,Profile,NP*%\n"))
 	}
 
-	file.Write([]byte("%%FSLAX46Y46*%%\n")) //Number Format
-	file.Write([]byte("%%MOMM*%%\n"))       //Millimeters
-	file.Write([]byte("%%LPD*%%\n"))        //Dark polarity
+	file.Write([]byte("%FSLAX46Y46*%\n")) //Number Format
+	file.Write([]byte("%MOMM*%\n"))       //Millimeters
+	file.Write([]byte("%LPD*%\n"))        //Dark polarity
 	file.Write([]byte("G04 == End Header ==*\n"))
 }
 
@@ -109,8 +109,8 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 	segments := LineDetection(img)
 	_ = segments
 
-	// scaleWidth := gerberWidth / float64(img.Bounds().Dx())
-	// scaleHeight := gerberHeight / float64(img.Bounds().Dy())
+	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
+	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
 	file := CreateFile(filename + "-" + gerberType + ".gbr")
 
@@ -119,18 +119,24 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 
 	file.Write([]byte("G01*\n")) //Linear interpolation mode
 	// # file.write("%TA.AperFunction,Profile*%")
-	// file.write("%ADD10C,0.200000*%") #Circle aperture
+	file.Write([]byte("%ADD10C,0.200000*%")) //Circle aperture
 	// # file.write("%TD*%")
-	// file.write("D10*") #Use aperture
+	file.Write([]byte("D10*")) //Use aperture
 
-	// print("> Writing Gerber")
-	// ts=time.time()
-	// for i, line in enumerate(segments):
-	//     file.write(F"X{NumRepr(scaleWidth*line[0][0])}Y{NumRepr(scaleHeight*(imgDim.Height-line[0][1]))}D02*\n")
-	//     file.write(F"X{NumRepr(scaleWidth*line[1][0])}Y{NumRepr(scaleHeight*(imgDim.Height-line[1][1]))}D01*\n")
-	//     ProgressBar(i, 0, len(segments)-1)
-	//     TimeDisplay(ts)
-	// print()
+	for _, segment := range segments {
+		file.Write([]byte(
+			fmt.Sprintf("X%sY%sD02*\n",
+				NumRepr(scaleWidth*segment.P1.X),
+				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P1.Y)),
+			),
+		))
+		file.Write([]byte(
+			fmt.Sprintf("X%sY%sD02*\n",
+				NumRepr(scaleWidth*segment.P2.X),
+				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P2.Y)),
+			),
+		))
+	}
 
 	FinishFile(file)
 	fmt.Println(TERM_GREY + "== Done Writing Gerber ==" + TERM_RESET)
