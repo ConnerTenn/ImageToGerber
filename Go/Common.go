@@ -17,7 +17,7 @@ var (
 	TERM_WHITE   = "\033[1;37m"
 )
 
-func CheckError(err error) {
+func CheckError(err interface{}) {
 	if err != nil {
 		fmt.Println(TERM_RED+"Error:"+TERM_RESET, err)
 		os.Exit(-1)

@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-type Options struct {
+type CmdOptions struct {
 	ConfigFileName string
 	SelectMethod   string
 	ImageFilename  string
@@ -31,7 +31,7 @@ func ShowHelp() {
 }
 
 func main() {
-	options := Options{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
+	options := CmdOptions{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
 
 	//Options parsing
 	for i := 0; i < len(os.Args); i++ {
