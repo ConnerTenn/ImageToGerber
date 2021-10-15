@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"image/png"
 	"os"
+	"strings"
 )
 
 type CmdOptions struct {
 	ConfigFileName string
 	SelectMethod   string
-	ImageFilename  string
 }
 
 func ShowHelp() {
 	fmt.Print(`Usage:
-./ImageToGerber.py [-h] [-c <config file>] [-m <method>] <image file>
+./ImageToGerber.py [-h] [-c <config file>] [-m <method>]
     -h --help       Show the help menu.
                     This argument is optional and will cause the program to
                     exit immediately.
@@ -24,7 +24,6 @@ func ShowHelp() {
     -m --method     <Dist/Blur/Blocky>
                     Select which pixel selection and processing method should be used.
                     Defaults to Dist
-    <image file>    The image file to process. This argument is reqired.
 
 `)
 	os.Exit(-1)
@@ -34,7 +33,7 @@ func main() {
 	options := CmdOptions{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
 
 	//Options parsing
-	for i := 0; i < len(os.Args); i++ {
+	for i := 1; i < len(os.Args); i++ {
 		arg := os.Args[i]
 		if arg == "-h" || arg == "--help" {
 			ShowHelp()
@@ -45,27 +44,33 @@ func main() {
 			options.SelectMethod = os.Args[i+1]
 			i++
 		} else {
-			options.ImageFilename = arg
+			CheckError("Unexpected Argument " + arg)
 		}
 	}
 
 	//Parse Config
-	ParseConfig(options.ConfigFileName)
+	processlist := ParseConfig(options.ConfigFileName)
 
-	//Open Image
-	file, err := os.Open(options.ImageFilename)
-	CheckError(err)
-	img, err := png.Decode(file)
-	CheckError(err)
+	for _, process := range processlist {
+		//Open Image
+		file, err := os.Open(process.Infile)
+		CheckError(err)
+		img, err := png.Decode(file)
+		CheckError(err)
 
-	fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
+		fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
 
-	//Select Config
-	newimg := SelectColors(img)
+		//Select Config
+		newimg := SelectColors(img, &process.Selection)
 
-	//Debug output
-	ofile, err := os.Create("Out.png")
-	CheckError(err)
-	png.Encode(ofile, newimg)
-	ofile.Close()
+		//Debug output
+		directory := process.Outfile[:strings.LastIndex(process.Outfile, "/")]
+		if len(directory) > 0 {
+			os.MkdirAll(directory, 0755)
+		}
+		ofile, err := os.Create(process.Outfile + ".png")
+		CheckError(err)
+		png.Encode(ofile, newimg)
+		ofile.Close()
+	}
 }

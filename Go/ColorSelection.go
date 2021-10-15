@@ -90,22 +90,14 @@ func TestTolWrap(value float64, target float64, tolPos float64, tolNeg float64) 
 	return math.Mod(value-target, 1.0) <= tolPos && math.Mod(target-value, 1.0) <= tolNeg
 }
 
+var Selection *[]Rule
+
 func SelectPixel(pixel color.Color) bool {
 	repr := GetColourRepr(pixel)
 
-	//Placeholder for debugging
-	var selection []Rule = []Rule{
-		{
-			Cond: []Condition{
-				{Fmt: "R", Arg: 0.5, TolPos: 1.0, TolNeg: 0.01},
-			},
-			Inv: false,
-		},
-	}
-
 	passRules := false
 
-	for _, rule := range selection {
+	for _, rule := range *Selection {
 		passConditions := true
 
 		for _, cond := range rule.Cond {
@@ -166,7 +158,9 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 	}
 }
 
-func SelectColors(img image.Image) *image.RGBA {
+func SelectColors(img image.Image, selection *[]Rule) *image.RGBA {
+	Selection = selection
+
 	//New image for selection
 	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
 
