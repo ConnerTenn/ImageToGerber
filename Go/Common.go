@@ -20,7 +20,7 @@ var (
 
 func TERM_UP(count int) string {
 	if count > 0 {
-		return fmt.Sprintf("\033[%dA", count)
+		return fmt.Sprintf("\033[%dF", count)
 	}
 	return ""
 }

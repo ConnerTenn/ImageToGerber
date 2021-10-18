@@ -21,7 +21,7 @@ func ParseConfig(filename string) []Process {
 	CheckError(err)
 
 	fmt.Println("Parsing configuration")
-	fmt.Println("========")
+	// fmt.Println("========")
 
 	//State variables
 	readingSelection := false
@@ -50,7 +50,7 @@ func ParseConfig(filename string) []Process {
 				keyvalue := strings.Split(line, "=")
 				key := keyvalue[0]
 				value := keyvalue[1]
-				fmt.Println(key)
+				// fmt.Println(key)
 
 				switch key {
 				case "Width":
@@ -73,7 +73,7 @@ func ParseConfig(filename string) []Process {
 				}
 			} else {
 				//Reading Selection
-				fmt.Println("  " + line)
+				// fmt.Println("  " + line)
 
 				//parsing the Inversion specifier
 				var newrule Rule
@@ -146,7 +146,7 @@ func ParseConfig(filename string) []Process {
 	if readingSelection {
 		processlist = append(processlist, currProcess)
 	}
-	fmt.Println("========")
+	// fmt.Println("========")
 	// for _, process := range processlist {
 	// 	fmt.Println(process)
 	// }

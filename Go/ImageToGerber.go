@@ -29,6 +29,9 @@ func ShowHelp() {
 }
 
 func main() {
+
+	InitPrinter()
+
 	options := CmdOptions{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
 
 	//Options parsing
@@ -78,4 +81,6 @@ func main() {
 			}
 		}
 	}
+
+	ClosePrinter()
 }
