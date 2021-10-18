@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/png"
 	"os"
-	"strings"
 )
 
 type CmdOptions struct {
