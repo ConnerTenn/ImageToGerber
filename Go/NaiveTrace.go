@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"time"
 )
@@ -179,7 +178,7 @@ func LineDetection(img image.Image, printer Printer) []Segment {
 		tNow := time.Now()
 		if tNow.Sub(tLast) > 100*time.Millisecond {
 			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
-			printer.Print(fmt.Sprintf("Tracing outline %s Time:%v", bar, tNow.Sub(tStart)))
+			printer.Print("Tracing outline %s Time:%v", bar, tNow.Sub(tStart))
 			tLast = tNow
 		}
 	}

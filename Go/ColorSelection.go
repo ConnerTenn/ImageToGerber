@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -203,7 +202,7 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 				tNow := time.Now()
 				if tNow.Sub(tLast) > 100*time.Millisecond {
 					bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
-					printer.Print(fmt.Sprintf("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart)))
+					printer.Print("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart))
 					tLast = tNow
 				}
 			} else {
