@@ -10,7 +10,7 @@ import (
 )
 
 type Printer interface {
-	Print(str string)
+	Print(args ...interface{})
 	Close()
 }
 
@@ -19,8 +19,8 @@ type PrinterThread struct {
 	UpdateChan chan string
 }
 
-func (p PrinterThread) Print(str string) {
-	p.UpdateChan <- str
+func (p PrinterThread) Print(args ...interface{}) {
+	p.UpdateChan <- fmt.Sprintf(args[0].(string), args[1:]...)
 }
 
 func (p PrinterThread) Close() {
@@ -145,8 +145,8 @@ func NewPrinter() Printer {
 	return newPrinter
 }
 
-func Print(str string) {
-	LogChan <- str
+func Print(args ...interface{}) {
+	LogChan <- fmt.Sprintf(args[0].(string), args[1:]...)
 }
 
 func ClosePrinter() {

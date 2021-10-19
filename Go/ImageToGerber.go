@@ -61,13 +61,13 @@ func main() {
 
 			//Open Image
 			splitpath := strings.Split(process.Infile, "/")
-			printer.Print(fmt.Sprintf("Opening File \"%s\"", splitpath[len(splitpath)-1]))
+			printer.Print("Opening File \"%s\"", splitpath[len(splitpath)-1])
 			file, err := os.Open(process.Infile)
 			CheckError(err)
 			img, err := png.Decode(file)
 			CheckError(err)
 
-			Print(fmt.Sprintf("Image Resolution: %dx%d", img.Bounds().Dx(), img.Bounds().Dy()))
+			Print("Image Resolution: %dx%d", img.Bounds().Dx(), img.Bounds().Dy())
 
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
@@ -91,6 +91,7 @@ func main() {
 				}
 			}
 
+			//Signal done process
 			printer.Close()
 			done <- true
 		}(process)
