@@ -61,20 +61,21 @@ func main() {
 
 			//Open Image
 			splitpath := strings.Split(process.Infile, "/")
-			printer.Print("Opening File \"%s\"", splitpath[len(splitpath)-1])
+			imageName := splitpath[len(splitpath)-1]
+			printer.Print(TERM_GREY+"Opening File \"%s\""+TERM_RESET, imageName)
 			file, err := os.Open(process.Infile)
 			CheckError(err)
 			img, err := png.Decode(file)
 			CheckError(err)
 
-			Print("Image Resolution: %dx%d", img.Bounds().Dx(), img.Bounds().Dy())
+			Print("Image \"%s\" Resolution: %dx%d", imageName, img.Bounds().Dx(), img.Bounds().Dy())
 
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
 			_ = newimg
 
 			//Image preview output
-			printer.Print("Writing Image File")
+			printer.Print(TERM_GREY + "Writing Image File" + TERM_RESET)
 			ofile := CreateFile(process.Outfile + ".png")
 			CheckError(err)
 			png.Encode(ofile, newimg)
@@ -103,10 +104,11 @@ func main() {
 	}
 	close(done)
 
-	//Done!
-	Print("")
-	Print("== Done ==")
-	Print("")
-
 	ClosePrinter()
+
+	//Done!
+	fmt.Println("")
+	fmt.Println("== Done ==")
+	fmt.Println("")
+
 }

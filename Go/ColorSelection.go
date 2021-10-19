@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"time"
 )
 
 type Condition struct {
@@ -172,7 +171,7 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 
 	numThreads := 10
 
-	printer.Print("Selecting Colors")
+	printer.Print(TERM_GREEN + "Selecting Colors" + TERM_RESET)
 
 	//Spawn threads
 	for i := 0; i < numThreads; i++ {
@@ -188,8 +187,8 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	//Progress print
 	go func() {
 		ymax := 0
-		tStart := time.Now()
-		tLast := time.Time{}
+		bardone := make(chan bool)
+		PrintProgressBar("Selecting Colors", TERM_GREEN, &ymax, 0, img.Bounds().Dx()-1-1, printer, bardone)
 		for true {
 			y, more := <-doneidx
 			if more {
@@ -197,15 +196,9 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 				if y > ymax {
 					ymax = y
 				}
-
-				//Update progress bar periodically
-				tNow := time.Now()
-				if tNow.Sub(tLast) > 100*time.Millisecond {
-					bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
-					printer.Print("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart))
-					tLast = tNow
-				}
 			} else {
+				bardone <- true
+				close(bardone)
 				return
 			}
 		}

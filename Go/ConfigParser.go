@@ -94,23 +94,23 @@ func ParseConfig(filename string) []Process {
 
 					//Error checking
 					if strings.Count(cond, "(") != 1 {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Missing '('")
 					}
 					if strings.Count(cond, ")") != 1 {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Missing ')'")
 					}
 					if strings.Count(cond, "+") != 1 {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Missing '+'")
 					}
 					if strings.Count(cond, "-") != 1 {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Missing '-'")
 					}
 					idxOpen := strings.Index(cond, "(")
 					idxClose := strings.Index(cond, ")")
 					idxPlus := strings.Index(cond, "+")
 					idxMinus := strings.Index(cond, "-")
 					if !(idxOpen < idxClose && idxClose < idxPlus && idxPlus < idxMinus) {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Symbols out of order")
 					}
 
 					//Split the conditions into tokens
@@ -121,7 +121,7 @@ func ParseConfig(filename string) []Process {
 					tokens := strings.Split(cond, "#")
 
 					if len(tokens[2]) != 0 {
-						CheckError("Invalid Condition Format")
+						CheckError("Invalid Condition Format: Unexpected element")
 					}
 
 					//Parse the tokens

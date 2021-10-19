@@ -2,7 +2,6 @@ package main
 
 import (
 	"image"
-	"time"
 )
 
 //  +----+   +----+
@@ -154,11 +153,12 @@ func GenerateSegments(pos Point, tl float64, tr float64, bl float64, br float64)
 func LineDetection(img image.Image, printer Printer) []Segment {
 	var segments []Segment
 
-	printer.Print("Tracing outline")
+	printer.Print(TERM_BLUE + "Tracing Outline" + TERM_RESET)
 
-	tStart := time.Now()
-	tLast := time.Time{}
-	for y := 0; y < img.Bounds().Dy()-1; y++ {
+	var y int
+	bardone := make(chan bool)
+	PrintProgressBar("Tracing Outline", TERM_BLUE, &y, 0, img.Bounds().Dx()-1-1, printer, bardone)
+	for y = 0; y < img.Bounds().Dy()-1; y++ {
 		for x := 0; x < img.Bounds().Dx()-1; x++ {
 			//Get 2x2 region of image
 			tl_i, _, _, _ := img.At(x+0, y+0).RGBA()
@@ -173,15 +173,9 @@ func LineDetection(img image.Image, printer Printer) []Segment {
 
 			segments = append(segments, GenerateSegments(Point{float64(x), float64(y)}, tl, tr, bl, br)...)
 		}
-
-		//Update progress bar periodically
-		tNow := time.Now()
-		if tNow.Sub(tLast) > 100*time.Millisecond {
-			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
-			printer.Print("Tracing outline %s Time:%v", bar, tNow.Sub(tStart))
-			tLast = tNow
-		}
 	}
+	bardone <- true
+	close(bardone)
 
 	return segments
 }

@@ -151,7 +151,7 @@ func Print(args ...interface{}) {
 
 func ClosePrinter() {
 	PrinterTicker.Stop()
-	// Print(strings.Repeat("\n", RefreshLines))
+	Print(strings.Repeat("\n", RefreshLines))
 	close(LogChan)
 	<-PrinterDone
 	close(PrinterDone)

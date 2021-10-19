@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -54,4 +55,28 @@ func ProgressBar(val int, minimum int, maximum int) string {
 	barSize := 20
 	progress := (barSize * (val - minimum)) / maximum
 	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]"
+}
+
+func PrintProgressBar(name string, color string, val *int, minimum int, maximum int, printer Printer, done chan bool) {
+	ticker := time.NewTicker(100 * time.Millisecond)
+	tStart := time.Now()
+
+	bar := ProgressBar(minimum, minimum, maximum)
+	printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, "---")
+
+	go func() {
+		run := true
+		for run {
+			select {
+			case t := <-ticker.C:
+				bar := ProgressBar(*val, minimum, maximum)
+				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, t.Sub(tStart))
+			case <-done:
+				ticker.Stop()
+				run = false
+				bar := ProgressBar(maximum, minimum, maximum)
+				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, time.Now().Sub(tStart))
+			}
+		}
+	}()
 }
