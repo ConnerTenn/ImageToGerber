@@ -74,6 +74,7 @@ func main() {
 			_ = newimg
 
 			//Debug output
+			printer.Print("Writing Image File")
 			ofile := CreateFile(process.Outfile + ".png")
 			CheckError(err)
 			png.Encode(ofile, newimg)
@@ -83,7 +84,7 @@ func main() {
 				boardWidth := process.BoardWidth
 				boardHeight := 0.0
 				if gerbertype == "Edge_Cuts" {
-					GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype)
+					GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype, printer)
 				} else {
 					GenerateGerberFillLines(newimg, boardWidth, boardHeight, process.Outfile, gerbertype, printer)
 				}

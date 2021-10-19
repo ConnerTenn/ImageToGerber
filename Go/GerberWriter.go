@@ -5,7 +5,6 @@ import (
 	"image"
 	"math"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -75,9 +74,8 @@ func GerberCreateLine(buff []byte, scaleWidth float64, scaleHeight float64, img 
 	return buff
 }
 
-func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight float64, filename string, gerberType string, printer Printer) {
-	// file = CreateFile(filename, gerberType)
-	file := CreateFile(filename + "-" + gerberType + ".gbr")
+func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
+	file := CreateFile(filepath + "-" + gerberType + ".gbr")
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
@@ -112,12 +110,12 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 			// DrawLine(img.Bounds().Dx()-1, y, rectsize)
 			rectsize = 0
 		}
-		tNow := time.Now()
 
+		//Update progress bar periodically
+		tNow := time.Now()
 		if tNow.Sub(tLast) > 100*time.Millisecond {
-			progress := 10 * y / img.Bounds().Dy()
-			bar := strings.Repeat("=", progress) + strings.Repeat(" ", 10-progress)
-			printer.Print(fmt.Sprintf("Writing Gerber %s [%s] Time:%v", , bar, tNow.Sub(tStart)))
+			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
+			printer.Print(fmt.Sprintf("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart)))
 			tLast = tNow
 		}
 	}
@@ -126,16 +124,16 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 	FinishFile(file, buff)
 }
 
-func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filename string, gerberType string) {
+func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
 	segments := LineDetection(img)
 	_ = segments
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
-	file := CreateFile(filename + "-" + gerberType + ".gbr")
+	file := CreateFile(filepath + "-" + gerberType + ".gbr")
 
-	fmt.Println(TERM_BLUE + "== Writing Gerber ==" + TERM_RESET)
+	Print("Writing Gerber")
 	buff := make([]byte, 0)
 	buff = WriteHeader(buff, gerberType)
 
@@ -145,7 +143,9 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 	// # file.write("%TD*%")
 	buff = append(buff, []byte("D10*")...) //Use aperture
 
-	for _, segment := range segments {
+	tStart := time.Now()
+	tLast := time.Time{}
+	for i, segment := range segments {
 		buff = append(buff, []byte(
 			fmt.Sprintf("X%sY%sD02*\n",
 				NumRepr(scaleWidth*segment.P1.X),
@@ -158,8 +158,15 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P2.Y)),
 			),
 		)...)
+
+		//Update progress bar periodically
+		tNow := time.Now()
+		if tNow.Sub(tLast) > 100*time.Millisecond {
+			bar := ProgressBar(i, 0, len(segments)-1)
+			printer.Print(fmt.Sprintf("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart)))
+			tLast = tNow
+		}
 	}
 
 	FinishFile(file, buff)
-	fmt.Println(TERM_GREY + "== Done Writing Gerber ==" + TERM_RESET)
 }

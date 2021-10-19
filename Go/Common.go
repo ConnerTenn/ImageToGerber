@@ -49,3 +49,9 @@ func CreateFile(filepath string) *os.File {
 	CheckError(err)
 	return oFile
 }
+
+func ProgressBar(val int, minimum int, maximum int) string {
+	barSize := 20
+	progress := (barSize * (val - minimum)) / maximum
+	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]"
+}
