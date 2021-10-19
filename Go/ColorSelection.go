@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"time"
 )
 
 type Condition struct {
@@ -136,7 +137,7 @@ func SelectPixel(pixel color.Color) bool {
 	return passRules
 }
 
-func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan bool) {
+func SelectRow(img image.Image, yidx chan int, doneidx chan int, newimg *image.RGBA, done chan bool) {
 	for true {
 		//Get next job
 		y, more := <-yidx
@@ -150,6 +151,8 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 					newimg.Set(x, y, color.Black)
 				}
 			}
+
+			doneidx <- y
 		} else {
 			//No more jobs
 			done <- true
@@ -158,35 +161,64 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 	}
 }
 
-func SelectColors(img image.Image, selection *[]Rule) *image.RGBA {
+func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RGBA {
 	Selection = selection
 
 	//New image for selection
 	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
 
 	yidx := make(chan int, img.Bounds().Dx()*img.Bounds().Dy())
+	doneidx := make(chan int, img.Bounds().Dx()*img.Bounds().Dy())
 	done := make(chan bool)
 
 	numThreads := 10
 
-	fmt.Println(TERM_BLUE + "== Selecting Colors ==" + TERM_RESET)
+	printer.Print("Selecting Colors")
 
 	//Spawn threads
 	for i := 0; i < numThreads; i++ {
-		go SelectRow(img, yidx, newimg, done)
+		go SelectRow(img, yidx, doneidx, newimg, done)
 	}
 
 	//Queue Jobs
-	for y := 0; y < img.Bounds().Max.Y; y++ {
+	for y := 0; y < img.Bounds().Dy(); y++ {
 		yidx <- y
 	}
 	close(yidx)
+
+	//Progress print
+	go func() {
+		ymax := 0
+		tStart := time.Now()
+		tLast := time.Time{}
+		for true {
+			y, more := <-doneidx
+			if more {
+				//Track the furthest progressed thread
+				if y > ymax {
+					ymax = y
+				}
+
+				//Update progress bar periodically
+				tNow := time.Now()
+				if tNow.Sub(tLast) > 100*time.Millisecond {
+					bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
+					printer.Print(fmt.Sprintf("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart)))
+					tLast = tNow
+				}
+			} else {
+				return
+			}
+		}
+	}()
 
 	//Wait for all jobs to complete
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
-	fmt.Println(TERM_GREY + "== Done Selecting Colors ==" + TERM_RESET)
+
+	close(doneidx)
+	close(done)
 
 	return newimg
 }

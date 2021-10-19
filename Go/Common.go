@@ -18,6 +18,21 @@ var (
 	TERM_WHITE   = "\033[1;37m"
 )
 
+func TERM_UP(count int) string {
+	if count > 0 {
+		return fmt.Sprintf("\033[%dF", count)
+	}
+	return ""
+}
+
+func Max(a int, b int) int {
+	if a >= b {
+		return a
+	} else {
+		return b
+	}
+}
+
 func CheckError(err interface{}) {
 	if err != nil {
 		fmt.Println(TERM_RED+"Error:"+TERM_RESET, err)
@@ -33,4 +48,10 @@ func CreateFile(filepath string) *os.File {
 	oFile, err := os.Create(filepath)
 	CheckError(err)
 	return oFile
+}
+
+func ProgressBar(val int, minimum int, maximum int) string {
+	barSize := 20
+	progress := (barSize * (val - minimum)) / maximum
+	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]"
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/png"
 	"os"
+	"strings"
 )
 
 type CmdOptions struct {
@@ -29,6 +30,9 @@ func ShowHelp() {
 }
 
 func main() {
+
+	InitPrinter()
+
 	options := CmdOptions{ConfigFileName: "Default.cfg", SelectMethod: "Blocky"}
 
 	//Options parsing
@@ -50,32 +54,58 @@ func main() {
 	//Parse Config
 	processlist := ParseConfig(options.ConfigFileName)
 
+	done := make(chan bool)
 	for _, process := range processlist {
-		//Open Image
-		file, err := os.Open(process.Infile)
-		CheckError(err)
-		img, err := png.Decode(file)
-		CheckError(err)
+		go func(process Process) {
+			printer := NewPrinter()
 
-		fmt.Printf("Image Resolution: %dx%d\n", img.Bounds().Dx(), img.Bounds().Dy())
+			//Open Image
+			splitpath := strings.Split(process.Infile, "/")
+			printer.Print(fmt.Sprintf("Opening File \"%s\"", splitpath[len(splitpath)-1]))
+			file, err := os.Open(process.Infile)
+			CheckError(err)
+			img, err := png.Decode(file)
+			CheckError(err)
 
-		//Select Config
-		newimg := SelectColors(img, &process.Selection)
+			Print(fmt.Sprintf("Image Resolution: %dx%d", img.Bounds().Dx(), img.Bounds().Dy()))
 
-		//Debug output
-		ofile := CreateFile(process.Outfile + ".png")
-		CheckError(err)
-		png.Encode(ofile, newimg)
-		ofile.Close()
+			//Select Config
+			newimg := SelectColors(img, &process.Selection, printer)
+			_ = newimg
 
-		for _, gerbertype := range process.Types {
-			boardWidth := process.BoardWidth
-			boardHeight := 0.0
-			if gerbertype == "Edge_Cuts" {
-				GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype)
-			} else {
-				GenerateGerberFillLines(newimg, boardWidth, boardHeight, process.Outfile, gerbertype)
+			//Image preview output
+			printer.Print("Writing Image File")
+			ofile := CreateFile(process.Outfile + ".png")
+			CheckError(err)
+			png.Encode(ofile, newimg)
+			ofile.Close()
+
+			//Generate a gerber for every gerber type requested
+			for _, gerbertype := range process.Types {
+				boardWidth := process.BoardWidth
+				boardHeight := boardWidth / float64(img.Bounds().Dx()) * float64(img.Bounds().Dy())
+				if gerbertype == "Edge_Cuts" {
+					GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype, printer)
+				} else {
+					GenerateGerberFillLines(newimg, boardWidth, boardHeight, process.Outfile, gerbertype, printer)
+				}
 			}
-		}
+
+			printer.Close()
+			done <- true
+		}(process)
 	}
+
+	//Wait for all processes to finish
+	for i := 0; i < len(processlist); i++ {
+		<-done
+	}
+	close(done)
+
+	//Done!
+	Print("")
+	Print("== Done ==")
+	Print("")
+
+	ClosePrinter()
 }
