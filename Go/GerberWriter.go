@@ -77,6 +77,7 @@ func GerberCreateLine(buff []byte, scaleWidth float64, scaleHeight float64, img 
 func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
 	file := CreateFile(filepath + "-" + gerberType + ".gbr")
 
+	//Scaling calculation
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
@@ -84,6 +85,7 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 	buff := make([]byte, 0)
 	buff = WriteHeader(buff, gerberType)
 
+	//Create the definitions for every possible rectangle size that may be used
 	for i := 1; i <= img.Bounds().Dx(); i++ {
 		buff = append(buff, []byte(fmt.Sprintf("%%ADD%dR,%.6fX%.6f*%%\n", i+10, scaleWidth*float64(i), scaleHeight))...) //Rectangle Object
 	}
@@ -119,7 +121,6 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 			tLast = tNow
 		}
 	}
-	// fmt.Println("Time:", t2.Sub(t1))
 
 	FinishFile(file, buff)
 }
@@ -145,13 +146,16 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 
 	tStart := time.Now()
 	tLast := time.Time{}
+	//Loop for every segment
 	for i, segment := range segments {
+		//Create P1
 		buff = append(buff, []byte(
 			fmt.Sprintf("X%sY%sD02*\n",
 				NumRepr(scaleWidth*segment.P1.X),
 				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P1.Y)),
 			),
 		)...)
+		//Create P2
 		buff = append(buff, []byte(
 			fmt.Sprintf("X%sY%sD02*\n",
 				NumRepr(scaleWidth*segment.P2.X),

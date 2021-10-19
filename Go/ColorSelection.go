@@ -186,22 +186,28 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	}
 	close(yidx)
 
+	//Progress print
 	go func() {
 		ymax := 0
 		tStart := time.Now()
 		tLast := time.Time{}
 		for true {
-			y := <-doneidx
-			if y > ymax {
-				ymax = y
-			}
+			y, more := <-doneidx
+			if more {
+				//Track the furthest progressed thread
+				if y > ymax {
+					ymax = y
+				}
 
-			//Update progress bar periodically
-			tNow := time.Now()
-			if tNow.Sub(tLast) > 100*time.Millisecond {
-				bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
-				printer.Print(fmt.Sprintf("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart)))
-				tLast = tNow
+				//Update progress bar periodically
+				tNow := time.Now()
+				if tNow.Sub(tLast) > 100*time.Millisecond {
+					bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
+					printer.Print(fmt.Sprintf("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart)))
+					tLast = tNow
+				}
+			} else {
+				return
 			}
 		}
 	}()
@@ -210,6 +216,9 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
+
+	close(doneidx)
+	close(done)
 
 	return newimg
 }

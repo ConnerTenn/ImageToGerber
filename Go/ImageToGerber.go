@@ -73,16 +73,17 @@ func main() {
 			newimg := SelectColors(img, &process.Selection, printer)
 			_ = newimg
 
-			//Debug output
+			//Image preview output
 			printer.Print("Writing Image File")
 			ofile := CreateFile(process.Outfile + ".png")
 			CheckError(err)
 			png.Encode(ofile, newimg)
 			ofile.Close()
 
+			//Generate a gerber for every gerber type requested
 			for _, gerbertype := range process.Types {
 				boardWidth := process.BoardWidth
-				boardHeight := 0.0
+				boardHeight := boardWidth / float64(img.Bounds().Dx()) * float64(img.Bounds().Dy())
 				if gerbertype == "Edge_Cuts" {
 					GenerateGerberTrace(newimg, boardWidth, boardHeight, process.Outfile, gerbertype, printer)
 				} else {
@@ -95,11 +96,13 @@ func main() {
 		}(process)
 	}
 
+	//Wait for all processes to finish
 	for i := 0; i < len(processlist); i++ {
 		<-done
 	}
 	close(done)
 
+	//Done!
 	Print("")
 	Print("== Done ==")
 	Print("")
