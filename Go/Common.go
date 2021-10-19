@@ -52,14 +52,16 @@ func CreateFile(filepath string) *os.File {
 }
 
 func ProgressBar(val int, minimum int, maximum int) string {
-	barSize := 20
+	barSize := TermWidth - 40
 	progress := (barSize * (val - minimum)) / maximum
 	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]"
 }
 
-func PrintProgressBar(name string, color string, val *int, minimum int, maximum int, printer Printer, done chan bool) {
+func PrintProgressBar(name string, color string, val *int, minimum int, maximum int, printer Printer, done chan bool, resp chan bool) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	tStart := time.Now()
+
+	name = fmt.Sprintf("%-16s", name)
 
 	bar := ProgressBar(minimum, minimum, maximum)
 	printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, "---")
@@ -70,13 +72,14 @@ func PrintProgressBar(name string, color string, val *int, minimum int, maximum 
 			select {
 			case t := <-ticker.C:
 				bar := ProgressBar(*val, minimum, maximum)
-				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, t.Sub(tStart))
+				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, t.Sub(tStart).Truncate(10*time.Millisecond))
 			case <-done:
 				ticker.Stop()
 				run = false
 				bar := ProgressBar(maximum, minimum, maximum)
-				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, time.Now().Sub(tStart))
+				printer.Print(color+name+" %s Time:%v"+TERM_RESET, bar, time.Now().Sub(tStart).Truncate(10*time.Millisecond))
 			}
 		}
+		resp <- true
 	}()
 }

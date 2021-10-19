@@ -156,8 +156,9 @@ func LineDetection(img image.Image, printer Printer) []Segment {
 	printer.Print(TERM_BLUE + "Tracing Outline" + TERM_RESET)
 
 	var y int
-	bardone := make(chan bool)
-	PrintProgressBar("Tracing Outline", TERM_BLUE, &y, 0, img.Bounds().Dx()-1-1, printer, bardone)
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Tracing Outline", TERM_BLUE, &y, 0, img.Bounds().Dx()-1-1, printer, barDone, barResp)
 	for y = 0; y < img.Bounds().Dy()-1; y++ {
 		for x := 0; x < img.Bounds().Dx()-1; x++ {
 			//Get 2x2 region of image
@@ -174,8 +175,10 @@ func LineDetection(img image.Image, printer Printer) []Segment {
 			segments = append(segments, GenerateSegments(Point{float64(x), float64(y)}, tl, tr, bl, br)...)
 		}
 	}
-	bardone <- true
-	close(bardone)
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	return segments
 }

@@ -91,8 +91,9 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 
 	rectsize := 0
 	var y int
-	bardone := make(chan bool)
-	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &y, 0, img.Bounds().Dy()-1, printer, bardone)
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &y, 0, img.Bounds().Dy()-1, printer, barDone, barResp)
 	for y = 0; y < img.Bounds().Dy(); y++ {
 		for x := 0; x < img.Bounds().Dx(); x++ {
 			//Get pixel value at this point
@@ -121,8 +122,10 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 		// 	tLast = tNow
 		// }
 	}
-	bardone <- true
-	close(bardone)
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	FinishFile(file, buff)
 }
@@ -147,8 +150,9 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 
 	//Loop for every segment
 	var i int
-	bardone := make(chan bool)
-	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &i, 0, len(segments)-1, printer, bardone)
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &i, 0, len(segments)-1, printer, barDone, barResp)
 	for _, segment := range segments {
 		//Create P1
 		buff = append(buff, []byte(
@@ -166,8 +170,10 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 		)...)
 		i++
 	}
-	bardone <- true
-	close(bardone)
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	FinishFile(file, buff)
 }

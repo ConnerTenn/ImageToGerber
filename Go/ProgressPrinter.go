@@ -67,8 +67,9 @@ func PrintProgress() {
 	for !done {
 		//Only, display every so often
 		select {
-		case _ = <-PrinterTicker.C:
-		case requestDone = <-PrinterDone:
+		case <-PrinterTicker.C:
+		case <-PrinterDone:
+			requestDone = true
 		}
 
 		//Acquire Threads lock
@@ -168,11 +169,11 @@ func Print(args ...interface{}) {
 }
 
 func ClosePrinter() {
-	//Stop the ticker
-	PrinterTicker.Stop()
 	//Request done
 	PrinterDone <- true
 	close(PrinterDone)
+	//Stop the ticker
+	PrinterTicker.Stop()
 	//Wait till it actually finishes
 	<-AllPrintThreadsDone
 	close(AllPrintThreadsDone)

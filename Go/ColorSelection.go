@@ -187,8 +187,9 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	//Progress print
 	go func() {
 		ymax := 0
-		bardone := make(chan bool)
-		PrintProgressBar("Selecting Colors", TERM_GREEN, &ymax, 0, img.Bounds().Dx()-1-1, printer, bardone)
+		barDone := make(chan bool)
+		barResp := make(chan bool)
+		PrintProgressBar("Selecting Colors", TERM_GREEN, &ymax, 0, img.Bounds().Dx()-1-1, printer, barDone, barResp)
 		for true {
 			y, more := <-doneidx
 			if more {
@@ -197,8 +198,10 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 					ymax = y
 				}
 			} else {
-				bardone <- true
-				close(bardone)
+				barDone <- true
+				<-barResp
+				close(barDone)
+				close(barResp)
 				return
 			}
 		}
