@@ -186,17 +186,14 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 
 	//Progress print
 	go func() {
-		ymax := 0
+		i := 0
 		barDone := make(chan bool)
 		barResp := make(chan bool)
-		PrintProgressBar("Selecting Colors", TERM_GREEN, &ymax, 0, img.Bounds().Dx()-1-1, printer, barDone, barResp)
+		PrintProgressBar("Selecting Colors", TERM_GREEN, &i, 0, img.Bounds().Dy()-1-1, printer, barDone, barResp)
 		for true {
-			y, more := <-doneidx
+			_, more := <-doneidx
 			if more {
-				//Track the furthest progressed thread
-				if y > ymax {
-					ymax = y
-				}
+				i++
 			} else {
 				barDone <- true
 				<-barResp
