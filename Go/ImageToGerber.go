@@ -108,7 +108,7 @@ func main() {
 
 	//Done!
 	fmt.Println("")
-	fmt.Println("== Done ==")
+	fmt.Println(TERM_GREEN + "== Done ==" + TERM_RESET)
 	fmt.Println("")
 
 }
