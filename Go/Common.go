@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -50,8 +51,35 @@ func CreateFile(filepath string) *os.File {
 	return oFile
 }
 
-func ProgressBar(val int, minimum int, maximum int) string {
-	barSize := 20
-	progress := (barSize * (val - minimum)) / maximum
-	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]"
+func ProgressBar(val int, minimum int, maximum int) (string, float64) {
+	barSize := TermWidth - 30
+	percent := (float64(val) - float64(minimum)) / float64(maximum)
+	progress := int(float64(barSize) * percent)
+	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]", percent * 100.0
+}
+
+func PrintProgressBar(name string, color string, val *int, minimum int, maximum int, printer Printer, done chan bool, resp chan bool) {
+	ticker := time.NewTicker(100 * time.Millisecond)
+
+	name = fmt.Sprintf("%-16s", name)
+
+	bar, percent := ProgressBar(minimum, minimum, maximum)
+	printer.Print(color+name+" %s  %.1f%%"+TERM_RESET, bar, percent)
+
+	go func() {
+		run := true
+		for run {
+			select {
+			case <-ticker.C:
+				bar, percent := ProgressBar(*val, minimum, maximum)
+				printer.Print(color+name+" %s  %.1f%%"+TERM_RESET, bar, percent)
+			case <-done:
+				ticker.Stop()
+				run = false
+				bar, percent := ProgressBar(maximum, minimum, maximum)
+				printer.Print(color+name+" %s  %.1f%%"+TERM_RESET, bar, percent)
+			}
+		}
+		resp <- true
+	}()
 }
