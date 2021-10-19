@@ -126,7 +126,7 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 }
 
 func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
-	segments := LineDetection(img)
+	segments := LineDetection(img, printer)
 	_ = segments
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
