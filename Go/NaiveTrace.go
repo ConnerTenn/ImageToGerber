@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"image"
+	"time"
 )
 
 //  +----+   +----+
@@ -151,10 +151,13 @@ func GenerateSegments(pos Point, tl float64, tr float64, bl float64, br float64)
 	return []Segment{}
 }
 
-func LineDetection(img image.Image) []Segment {
+func LineDetection(img image.Image, printer Printer) []Segment {
 	var segments []Segment
 
-	fmt.Println(TERM_BLUE + "== Tracing outline" + TERM_RESET)
+	printer.Print("Tracing outline")
+
+	tStart := time.Now()
+	tLast := time.Time{}
 	for y := 0; y < img.Bounds().Dy()-1; y++ {
 		for x := 0; x < img.Bounds().Dx()-1; x++ {
 			//Get 2x2 region of image
@@ -170,8 +173,15 @@ func LineDetection(img image.Image) []Segment {
 
 			segments = append(segments, GenerateSegments(Point{float64(x), float64(y)}, tl, tr, bl, br)...)
 		}
+
+		//Update progress bar periodically
+		tNow := time.Now()
+		if tNow.Sub(tLast) > 100*time.Millisecond {
+			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
+			printer.Print("Tracing outline %s Time:%v", bar, tNow.Sub(tStart))
+			tLast = tNow
+		}
 	}
-	fmt.Println(TERM_GREY + "== Done Tracing outline" + TERM_RESET)
 
 	return segments
 }

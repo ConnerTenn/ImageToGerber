@@ -117,7 +117,7 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 		tNow := time.Now()
 		if tNow.Sub(tLast) > 100*time.Millisecond {
 			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
-			printer.Print(fmt.Sprintf("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart)))
+			printer.Print("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart))
 			tLast = tNow
 		}
 	}
@@ -126,7 +126,7 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 }
 
 func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
-	segments := LineDetection(img)
+	segments := LineDetection(img, printer)
 	_ = segments
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
@@ -167,7 +167,7 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 		tNow := time.Now()
 		if tNow.Sub(tLast) > 100*time.Millisecond {
 			bar := ProgressBar(i, 0, len(segments)-1)
-			printer.Print(fmt.Sprintf("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart)))
+			printer.Print("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart))
 			tLast = tNow
 		}
 	}
