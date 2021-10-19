@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"math"
@@ -158,7 +157,7 @@ func SelectRow(img image.Image, yidx chan int, newimg *image.RGBA, done chan boo
 	}
 }
 
-func SelectColors(img image.Image, selection *[]Rule) *image.RGBA {
+func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RGBA {
 	Selection = selection
 
 	//New image for selection
@@ -169,7 +168,7 @@ func SelectColors(img image.Image, selection *[]Rule) *image.RGBA {
 
 	numThreads := 10
 
-	fmt.Println(TERM_BLUE + "== Selecting Colors ==" + TERM_RESET)
+	printer.Print("Selecting Colors")
 
 	//Spawn threads
 	for i := 0; i < numThreads; i++ {
@@ -186,7 +185,6 @@ func SelectColors(img image.Image, selection *[]Rule) *image.RGBA {
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
-	fmt.Println(TERM_GREY + "== Done Selecting Colors ==" + TERM_RESET)
 
 	return newimg
 }

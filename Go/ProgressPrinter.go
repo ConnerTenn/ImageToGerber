@@ -52,9 +52,7 @@ func GlobalPrint() {
 		if more {
 			PrintMutex.Lock()
 			PrintLine(str)
-			if RefreshLines > 0 {
-				RefreshLines -= 1
-			}
+			RefreshLines = 0
 			PrintMutex.Unlock()
 		} else {
 			PrinterDone <- true
@@ -65,44 +63,68 @@ func GlobalPrint() {
 func PrintProgress() {
 	more := true
 	for more {
+		//Only, display every so often
 		_, more = <-PrinterTicker.C
 
+		//Acquire Threads lock
 		ThreadPrintsMutex.Lock()
+
 		if len(ThreadPrints) > 0 {
+			//Do prints!
 			PrintMutex.Lock()
 
-			PrintLine("==========")
-			for _, thread := range ThreadPrints {
-				PrintLine(thread.CurrentStr)
-			}
-			PrintLine("==========")
-			RefreshLines = len(ThreadPrints) + 2
-
+			//Overwrite previous section
 			if RefreshLines > 0 {
 				fmt.Print(TERM_UP(RefreshLines))
 			}
 
+			//Print each thread's string
+			PrintLine("")
+			PrintLine("==========")
+			for _, thread := range ThreadPrints {
+				PrintLine("| " + thread.CurrentStr)
+			}
+			PrintLine("==========")
+			PrintLine("")
+
+			//Count the number of lines that have been printed
+			newRefreshLines := len(ThreadPrints) + 4
+
+			//Account for when a thread has been remove
+			if newRefreshLines < RefreshLines {
+				for i := 0; i < RefreshLines-newRefreshLines; i++ {
+					PrintLine("")
+					fmt.Print(TERM_UP(1))
+				}
+			}
+			RefreshLines = newRefreshLines
+
+			//Done Prints
 			PrintMutex.Unlock()
 		}
+
+		var newThreadPrints = make([]PrinterThread, 0)
 
 		for i, thread := range ThreadPrints {
 			select {
 			case str, more := <-thread.UpdateChan:
 				if more {
 					ThreadPrints[i].CurrentStr = str
-				} else {
-					ThreadPrints = append(ThreadPrints[:i], ThreadPrints[i+1:]...)
+					newThreadPrints = append(newThreadPrints, ThreadPrints[i])
 				}
 			default:
+				newThreadPrints = append(newThreadPrints, ThreadPrints[i])
 			}
 		}
+		ThreadPrints = newThreadPrints
+
 		ThreadPrintsMutex.Unlock()
 	}
 }
 
 func InitPrinter() {
 	TermWidth = getWidth()
-	LogChan = make(chan string)
+	LogChan = make(chan string, 100)
 	PrintMutex = new(sync.Mutex)
 	ThreadPrintsMutex = new(sync.Mutex)
 	PrinterDone = make(chan bool)
@@ -114,7 +136,7 @@ func InitPrinter() {
 }
 
 func NewPrinter() Printer {
-	newPrinter := PrinterThread{CurrentStr: "", UpdateChan: make(chan string)}
+	newPrinter := PrinterThread{CurrentStr: "", UpdateChan: make(chan string, 100)}
 
 	ThreadPrintsMutex.Lock()
 	ThreadPrints = append(ThreadPrints, newPrinter)

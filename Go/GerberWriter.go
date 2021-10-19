@@ -5,6 +5,7 @@ import (
 	"image"
 	"math"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -74,14 +75,14 @@ func GerberCreateLine(buff []byte, scaleWidth float64, scaleHeight float64, img 
 	return buff
 }
 
-func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight float64, filename string, gerberType string) {
+func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight float64, filename string, gerberType string, printer Printer) {
 	// file = CreateFile(filename, gerberType)
 	file := CreateFile(filename + "-" + gerberType + ".gbr")
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
-	fmt.Println(TERM_BLUE + "== Writing Gerber ==" + TERM_RESET)
+	printer.Print("Writing Gerber")
 	buff := make([]byte, 0)
 	buff = WriteHeader(buff, gerberType)
 
@@ -89,7 +90,8 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 		buff = append(buff, []byte(fmt.Sprintf("%%ADD%dR,%.6fX%.6f*%%\n", i+10, scaleWidth*float64(i), scaleHeight))...) //Rectangle Object
 	}
 
-	t1 := time.Now()
+	tStart := time.Now()
+	tLast := time.Time{}
 	rectsize := 0
 	for y := 0; y < img.Bounds().Dy(); y++ {
 		for x := 0; x < img.Bounds().Dx(); x++ {
@@ -110,12 +112,18 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 			// DrawLine(img.Bounds().Dx()-1, y, rectsize)
 			rectsize = 0
 		}
+		tNow := time.Now()
+
+		if tNow.Sub(tLast) > 100*time.Millisecond {
+			progress := 10 * y / img.Bounds().Dy()
+			bar := strings.Repeat("=", progress) + strings.Repeat(" ", 10-progress)
+			printer.Print(fmt.Sprintf("Writing Gerber %s [%s] Time:%v", , bar, tNow.Sub(tStart)))
+			tLast = tNow
+		}
 	}
-	t2 := time.Now()
-	fmt.Println("Time:", t2.Sub(t1))
+	// fmt.Println("Time:", t2.Sub(t1))
 
 	FinishFile(file, buff)
-	fmt.Println(TERM_GREY + "== Done Writing Gerber ==" + TERM_RESET)
 }
 
 func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filename string, gerberType string) {
