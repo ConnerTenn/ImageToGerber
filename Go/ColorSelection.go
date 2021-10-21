@@ -185,32 +185,28 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	close(yidx)
 
 	//Progress print
-	go func() {
-		i := 0
-		barDone := make(chan bool)
-		barResp := make(chan bool)
-		PrintProgressBar("Selecting Colors", TERM_GREEN, &i, 0, img.Bounds().Dy()-1-1, printer, barDone, barResp)
-		for true {
-			_, more := <-doneidx
-			if more {
-				i++
-			} else {
-				barDone <- true
-				<-barResp
-				close(barDone)
-				close(barResp)
-				return
-			}
-		}
-	}()
+	i := 0
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Selecting Colors", TERM_GREEN, &i, 0, img.Bounds().Dy()-1-1, printer, barDone, barResp)
+	//Counter for progress bar
+	for i < img.Bounds().Dy() {
+		<-doneidx
+		i++
+	}
 
 	//Wait for all jobs to complete
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
-
 	close(doneidx)
 	close(done)
+
+	//Synchronize with stopping the progress bar
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	return newimg
 }
