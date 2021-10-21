@@ -34,6 +34,14 @@ func Max(a int, b int) int {
 	}
 }
 
+func Min(a int, b int) int {
+	if a <= b {
+		return a
+	} else {
+		return b
+	}
+}
+
 func CheckError(err interface{}) {
 	if err != nil {
 		fmt.Println(TERM_RED+"Error:"+TERM_RESET, err)
@@ -54,7 +62,7 @@ func CreateFile(filepath string) *os.File {
 func ProgressBar(val int, minimum int, maximum int) (string, float64) {
 	barSize := TermWidth - 30
 	percent := (float64(val) - float64(minimum)) / float64(maximum)
-	progress := int(float64(barSize) * percent)
+	progress := Min(int(float64(barSize)*percent), barSize)
 	return "[" + strings.Repeat("=", progress) + strings.Repeat(" ", barSize-progress) + "]", percent * 100.0
 }
 
