@@ -5,7 +5,6 @@ import (
 	"image"
 	"math"
 	"os"
-	"time"
 )
 
 func FinishFile(file *os.File, buff []byte) {
@@ -81,7 +80,7 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
-	printer.Print("Writing Gerber")
+	printer.Print(TERM_MAGENTA + "Writing Gerber" + TERM_RESET)
 	buff := make([]byte, 0)
 	buff = WriteHeader(buff, gerberType)
 
@@ -90,10 +89,12 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 		buff = append(buff, []byte(fmt.Sprintf("%%ADD%dR,%.6fX%.6f*%%\n", i+10, scaleWidth*float64(i), scaleHeight))...) //Rectangle Object
 	}
 
-	tStart := time.Now()
-	tLast := time.Time{}
 	rectsize := 0
-	for y := 0; y < img.Bounds().Dy(); y++ {
+	var y int
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &y, 0, img.Bounds().Dy()-1, printer, barDone, barResp)
+	for y = 0; y < img.Bounds().Dy(); y++ {
 		for x := 0; x < img.Bounds().Dx(); x++ {
 			//Get pixel value at this point
 			r, _, _, _ := img.At(x, y).RGBA()
@@ -114,27 +115,30 @@ func GenerateGerberFillLines(img image.Image, gerberWidth float64, gerberHeight 
 		}
 
 		//Update progress bar periodically
-		tNow := time.Now()
-		if tNow.Sub(tLast) > 100*time.Millisecond {
-			bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
-			printer.Print("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart))
-			tLast = tNow
-		}
+		// tNow := time.Now()
+		// if tNow.Sub(tLast) > 100*time.Millisecond {
+		// 	bar := ProgressBar(y, 0, img.Bounds().Dy()-1)
+		// 	printer.Print(TERM_MAGENTA+"Writing Gerber %s Time:%v"+TERM_RESET, bar, tNow.Sub(tStart))
+		// 	tLast = tNow
+		// }
 	}
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	FinishFile(file, buff)
 }
 
 func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight float64, filepath string, gerberType string, printer Printer) {
 	segments := LineDetection(img, printer)
-	_ = segments
 
 	scaleWidth := gerberWidth / float64(img.Bounds().Dx())
 	scaleHeight := gerberHeight / float64(img.Bounds().Dy())
 
 	file := CreateFile(filepath + "-" + gerberType + ".gbr")
 
-	Print("Writing Gerber")
+	printer.Print(TERM_MAGENTA + "Writing Gerber" + TERM_RESET)
 	buff := make([]byte, 0)
 	buff = WriteHeader(buff, gerberType)
 
@@ -144,10 +148,12 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 	// # file.write("%TD*%")
 	buff = append(buff, []byte("D10*")...) //Use aperture
 
-	tStart := time.Now()
-	tLast := time.Time{}
 	//Loop for every segment
-	for i, segment := range segments {
+	var i int
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Writing Gerber", TERM_MAGENTA, &i, 0, len(segments)-1, printer, barDone, barResp)
+	for _, segment := range segments {
 		//Create P1
 		buff = append(buff, []byte(
 			fmt.Sprintf("X%sY%sD02*\n",
@@ -162,15 +168,12 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P2.Y)),
 			),
 		)...)
-
-		//Update progress bar periodically
-		tNow := time.Now()
-		if tNow.Sub(tLast) > 100*time.Millisecond {
-			bar := ProgressBar(i, 0, len(segments)-1)
-			printer.Print("Writing Gerber %s Time:%v", bar, tNow.Sub(tStart))
-			tLast = tNow
-		}
+		i++
 	}
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	FinishFile(file, buff)
 }

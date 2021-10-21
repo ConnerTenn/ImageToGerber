@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"time"
 )
 
 type Condition struct {
@@ -172,7 +171,7 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 
 	numThreads := 10
 
-	printer.Print("Selecting Colors")
+	printer.Print(TERM_GREEN + "Selecting Colors" + TERM_RESET)
 
 	//Spawn threads
 	for i := 0; i < numThreads; i++ {
@@ -186,38 +185,28 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	close(yidx)
 
 	//Progress print
-	go func() {
-		ymax := 0
-		tStart := time.Now()
-		tLast := time.Time{}
-		for true {
-			y, more := <-doneidx
-			if more {
-				//Track the furthest progressed thread
-				if y > ymax {
-					ymax = y
-				}
-
-				//Update progress bar periodically
-				tNow := time.Now()
-				if tNow.Sub(tLast) > 100*time.Millisecond {
-					bar := ProgressBar(ymax, 0, img.Bounds().Dy()-1)
-					printer.Print("Selecting Colors %s Time:%v", bar, tNow.Sub(tStart))
-					tLast = tNow
-				}
-			} else {
-				return
-			}
-		}
-	}()
+	i := 0
+	barDone := make(chan bool)
+	barResp := make(chan bool)
+	PrintProgressBar("Selecting Colors", TERM_GREEN, &i, 0, img.Bounds().Dy()-1-1, printer, barDone, barResp)
+	//Counter for progress bar
+	for i < img.Bounds().Dy() {
+		<-doneidx
+		i++
+	}
 
 	//Wait for all jobs to complete
 	for i := 0; i < numThreads; i++ {
 		<-done
 	}
-
 	close(doneidx)
 	close(done)
+
+	//Synchronize with stopping the progress bar
+	barDone <- true
+	<-barResp
+	close(barDone)
+	close(barResp)
 
 	return newimg
 }
