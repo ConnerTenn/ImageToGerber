@@ -72,11 +72,11 @@ func main() {
 
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
-			_ = newimg
 
 			//Image preview output
-			printer.Print(TERM_GREY + "Writing Image File" + TERM_RESET)
-			ofile := CreateFile(process.Outfile + ".png")
+			imgName := process.Outfile + "-" + process.Types[0] + ".png"
+			printer.Print(TERM_GREY + "Writing Image File:" + imgName + TERM_RESET)
+			ofile := CreateFile(imgName)
 			CheckError(err)
 			png.Encode(ofile, newimg)
 			ofile.Close()
