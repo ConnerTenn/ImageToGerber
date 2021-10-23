@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"sync"
 )
 
 type Condition struct {
@@ -89,14 +90,12 @@ func TestTolWrap(value float64, target float64, tolPos float64, tolNeg float64) 
 	return math.Mod(value-target, 1.0) <= tolPos && math.Mod(target-value, 1.0) <= tolNeg
 }
 
-var Selection *[]Rule
-
-func SelectPixel(pixel color.Color) bool {
+func SelectPixel(pixel color.Color, selection *[]Rule) bool {
 	repr := GetColourRepr(pixel)
 
 	passRules := false
 
-	for _, rule := range *Selection {
+	for _, rule := range *selection {
 		passConditions := true
 
 		for _, cond := range rule.Cond {
@@ -135,7 +134,7 @@ func SelectPixel(pixel color.Color) bool {
 	return passRules
 }
 
-func SelectRow(img image.Image, yidx chan int, doneidx chan int, newimg *image.RGBA, done chan bool) {
+func SelectRow(img image.Image, imgLock *sync.Mutex, selection *[]Rule, yidx chan int, doneidx chan int, newimg *image.RGBA, done chan bool) {
 	for true {
 		//Get next job
 		y, more := <-yidx
@@ -143,7 +142,7 @@ func SelectRow(img image.Image, yidx chan int, doneidx chan int, newimg *image.R
 		if more {
 			//Process Job
 			for x := 0; x < img.Bounds().Max.X; x++ {
-				if SelectPixel(img.At(x, y)) {
+				if SelectPixel(img.At(x, y), selection) {
 					newimg.Set(x, y, color.White)
 				} else {
 					newimg.Set(x, y, color.Black)
@@ -160,8 +159,6 @@ func SelectRow(img image.Image, yidx chan int, doneidx chan int, newimg *image.R
 }
 
 func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RGBA {
-	Selection = selection
-
 	//New image for selection
 	var newimg *image.RGBA = image.NewRGBA(img.Bounds())
 
@@ -173,9 +170,11 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 
 	printer.Print(TERM_GREEN + "Selecting Colors" + TERM_RESET)
 
+	imgLock := new(sync.Mutex)
+
 	//Spawn threads
 	for i := 0; i < numThreads; i++ {
-		go SelectRow(img, yidx, doneidx, newimg, done)
+		go SelectRow(img, imgLock, selection, yidx, doneidx, newimg, done)
 	}
 
 	//Queue Jobs
