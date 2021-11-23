@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	"image/png"
 	"os"
 	"strings"
@@ -53,22 +54,31 @@ func main() {
 
 	//Parse Config
 	processlist := ParseConfig(options.ConfigFileName)
+	imageMap := make(map[string]image.Image)
 
-	done := make(chan bool)
 	for _, process := range processlist {
-		go func(process Process) {
-			printer := NewPrinter()
-
+		if imageMap[process.Infile] == nil {
 			//Open Image
 			splitpath := strings.Split(process.Infile, "/")
 			imageName := splitpath[len(splitpath)-1]
-			printer.Print(TERM_GREY+"Opening File \"%s\""+TERM_RESET, imageName)
+			fmt.Printf(TERM_GREY+"Opening File \"%s\"\n"+TERM_RESET, imageName)
 			file, err := os.Open(process.Infile)
 			CheckError(err)
 			img, err := png.Decode(file)
 			CheckError(err)
 
 			Print("Image \"%s\" Resolution: %dx%d", imageName, img.Bounds().Dx(), img.Bounds().Dy())
+			imageMap[process.Infile] = img
+		}
+	}
+
+	done := make(chan bool)
+	for _, process := range processlist {
+		go func(process Process) {
+			printer := NewPrinter()
+
+			//Get Image
+			img := imageMap[process.Infile]
 
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
@@ -77,7 +87,6 @@ func main() {
 			imgName := process.Outfile + "-" + process.Types[0] + ".png"
 			printer.Print(TERM_GREY + "Writing Image File:" + imgName + TERM_RESET)
 			ofile := CreateFile(imgName)
-			CheckError(err)
 			png.Encode(ofile, newimg)
 			ofile.Close()
 
