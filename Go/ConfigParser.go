@@ -34,7 +34,7 @@ func ParseConfig(filename string) []Process {
 
 	currProcess.Infile = ""
 	currProcess.HasDither = false
-	currProcess.Fill = "solid"
+	currProcess.Fill = "Solid"
 	currProcess.Seed = 0
 
 	scanner := bufio.NewScanner(file)
@@ -51,6 +51,7 @@ func ParseConfig(filename string) []Process {
 			processlist = append(processlist, currProcess)
 			//Reset selection but keep other settings
 			currProcess.Selection = make([]Rule, 0)
+			currProcess.Fill = "Solid"
 		}
 
 		if len(line) > 0 {
@@ -81,6 +82,7 @@ func ParseConfig(filename string) []Process {
 						CheckError("Invalid Dither format")
 					}
 					currProcess.Dither, err = strconv.ParseFloat(value[0], 64)
+					currProcess.Dither = currProcess.Dither / 100.0
 					currProcess.HasDither = true
 					CheckError(err)
 				case "Fill":
