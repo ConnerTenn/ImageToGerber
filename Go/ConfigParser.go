@@ -13,6 +13,10 @@ type Process struct {
 	Infile     string
 	Outfile    string
 	Types      []string
+	HasDither  bool
+	Dither     float64
+	Fill       string
+	Seed       int64
 	Selection  []Rule
 }
 
@@ -27,6 +31,11 @@ func ParseConfig(filename string) []Process {
 	readingSelection := false
 	var currProcess Process
 	var processlist []Process
+
+	currProcess.Infile = ""
+	currProcess.HasDither = false
+	currProcess.Fill = "solid"
+	currProcess.Seed = 0
 
 	scanner := bufio.NewScanner(file)
 	//Loop through each line
@@ -63,8 +72,22 @@ func ParseConfig(filename string) []Process {
 					currProcess.BoardWidth = boardwidth
 				case "Infile":
 					currProcess.Infile = strings.Trim(value, "\"")
+					currProcess.HasDither = false
 				case "Outfile":
 					currProcess.Outfile = strings.Trim(value, "\"")
+				case "Dither":
+					value := strings.Split(value, "%")
+					if len(value) != 2 {
+						CheckError("Invalid Dither format")
+					}
+					currProcess.Dither, err = strconv.ParseFloat(value[0], 64)
+					currProcess.HasDither = true
+					CheckError(err)
+				case "Fill":
+					currProcess.Fill = value
+				case "Seed":
+					currProcess.Seed, err = strconv.ParseInt(value, 10, 64)
+					CheckError(err)
 				case "Selection":
 					currProcess.Types = strings.Split(value, ",")
 					readingSelection = true
