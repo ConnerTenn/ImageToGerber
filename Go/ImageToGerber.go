@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"image/png"
 	"math/rand"
 	"os"
@@ -32,11 +31,6 @@ func ShowHelp() {
 	os.Exit(-1)
 }
 
-type ImageCache struct {
-	Img     image.Image
-	Dithers map[float64]DitherImg
-}
-
 func main() {
 
 	InitPrinter()
@@ -60,17 +54,19 @@ func main() {
 	}
 
 	//Parse Config
-	processlist := ParseConfig(options.ConfigFileName)
-	imageMap := make(map[string]ImageCache)
+	processlist, ditherlist := ParseConfig(options.ConfigFileName)
+	imageCache := make(map[string]image.Image)
+
+	var maxBounds = image.Point{0, 0}
 
 	for _, process := range processlist {
 		rand.Seed(process.Seed)
 
-		if _, exist := imageMap[process.Infile]; !exist {
+		if _, exist := imageCache[process.Infile]; !exist {
 			//Open Image
 			splitpath := strings.Split(process.Infile, "/")
 			imageName := splitpath[len(splitpath)-1]
-			fmt.Printf(TERM_GREY+"Opening File \"%s\"\n"+TERM_RESET, imageName)
+			Print(TERM_GREY+"Opening File \"%s\"\n"+TERM_RESET, imageName)
 			file, err := os.Open(process.Infile)
 			CheckError(err)
 			img, err := png.Decode(file)
@@ -78,30 +74,21 @@ func main() {
 
 			Print("Image \"%s\" Resolution: %dx%d", imageName, img.Bounds().Dx(), img.Bounds().Dy())
 
-			imageMap[process.Infile] = ImageCache{Img: img, Dithers: make(map[float64]DitherImg)}
-		}
-
-		//Generate Dithers
-		if process.HasDither {
-			ditherExist := false
-			//Check if a dither for this image and config has already been generated
-			for dither := range imageMap[process.Infile].Dithers {
-				if dither == process.Dither {
-					ditherExist = true
-				}
+			if img.Bounds().Dx() > maxBounds.X {
+				maxBounds.X = img.Bounds().Dx()
+			}
+			if img.Bounds().Dy() > maxBounds.Y {
+				maxBounds.Y = img.Bounds().Dy()
 			}
 
-			if !ditherExist {
-				fmt.Println("Generate Dither")
-
-				cache := imageMap[process.Infile]
-
-				cache.Dithers[process.Dither] = GenerateDither(
-					cache.Img.Bounds().Dx(),
-					cache.Img.Bounds().Dy(),
-					process.Dither)
-			}
+			imageCache[process.Infile] = img
+			// imageCache[process.Infile] = ImageCache{Img: img, Dithers: make(map[float64]DitherImg)}
 		}
+	}
+
+	for _, dither := range ditherlist {
+		ditherImg := GenerateDither(maxBounds.X, maxBounds.Y, dither.Factor)
+		WriteDitherToFile(ditherImg, dither.OutFile)
 	}
 
 	done := make(chan bool)
@@ -110,32 +97,23 @@ func main() {
 			printer := NewPrinter()
 
 			//Get Cache
-			cache := imageMap[process.Infile]
-			img := cache.Img
+			img := imageCache[process.Infile]
 
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
 
 			//Post Process the fill type
-			if process.Fill == "Dither+" || process.Fill == "Dither-" {
-				//Process the dither selection
-				if process.HasDither {
-					dither := cache.Dithers[process.Dither]
+			if process.Fill != "Solid" {
+				tokens := strings.Split(process.Fill, "\"")
+				fillfile, err := os.Open(tokens[1])
+				CheckError(err)
+				fillimg, err := png.Decode(fillfile)
+				CheckError(err)
 
-					//Process image
-					for y := 0; y < img.Bounds().Dy(); y++ {
-						for x := 0; x < img.Bounds().Dx(); x++ {
-							//Blank pixel according to dither pattern
-							if process.Fill == "Dither+" && !dither[y][x] ||
-								process.Fill == "Dither-" && dither[y][x] {
-								newimg.Set(x, y, color.RGBA{0, 0, 0, 255})
-							}
-						}
-					}
+				//Process image
+				newimg = FillMask(newimg, fillimg, tokens[2])
 
-				} else {
-					CheckError("Cannot fill Dither if no dither has been specified")
-				}
+				fillfile.Close()
 			}
 
 			//Image preview output

@@ -209,3 +209,25 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 
 	return newimg
 }
+
+func FillMask(img image.Image, fillimg image.Image, polarity string) *image.RGBA {
+	newimg := image.NewRGBA(img.Bounds())
+
+	//Process image
+	for y := 0; y < img.Bounds().Dy(); y++ {
+		for x := 0; x < img.Bounds().Dx(); x++ {
+			pixel := fillimg.At(x%fillimg.Bounds().Dx(), y%fillimg.Bounds().Dy())
+			repr := GetColourRepr(pixel)
+
+			//Select pixel according to the fill mask
+			if polarity == "+" && repr.V >= 0.5 ||
+				polarity == "-" && repr.V < 0.5 {
+				newimg.Set(x, y, img.At(x, y))
+			} else {
+				newimg.Set(x, y, color.Black)
+			}
+		}
+	}
+
+	return newimg
+}

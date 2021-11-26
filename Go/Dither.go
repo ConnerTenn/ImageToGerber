@@ -1,8 +1,13 @@
 package main
 
-import "math/rand"
+import (
+	"image"
+	"image/color"
+	"image/png"
+	"math/rand"
+)
 
-type DitherImg [][]bool
+type DitherImg [][]float64
 
 func CreateKernel() [][]float64 {
 	// kernel := [][]float64{
@@ -47,8 +52,9 @@ func CreateKernel() [][]float64 {
 }
 
 func GenerateDither(width int, height int, factor float64) DitherImg {
+	Print("Generating Dither [%dx%d] factor:%f\n", width, height, factor)
 
-	dither := make([][]float64, height)
+	dither := make(DitherImg, height)
 	for y := range dither {
 		dither[y] = make([]float64, width)
 		for x := range dither[y] {
@@ -96,15 +102,25 @@ func GenerateDither(width int, height int, factor float64) DitherImg {
 		}
 	}
 
-	ditherimg := make(DitherImg, height)
-	//Convert image to boolean array
-	for y := 0; y < height; y++ {
-		ditherimg[y] = make([]bool, width)
-		for x := 0; x < width; x++ {
-			//Pixel cutoff point at 50%
-			ditherimg[y][x] = (dither[y][x] >= 0.5)
+	return dither
+}
+
+func WriteDitherToFile(ditherImg DitherImg, filename string) {
+	Print(TERM_GREEN+"Outputting File \"%s\"\n"+TERM_RESET, filename)
+
+	img := image.NewRGBA(image.Rect(0, 0, len(ditherImg[0]), len(ditherImg)))
+
+	for y, row := range ditherImg {
+		for x, val := range row {
+			pixel := color.RGBA{0, 0, 0, 255}
+			if val >= 0.5 {
+				pixel = color.RGBA{255, 255, 255, 255}
+			}
+			img.Set(x, y, pixel)
 		}
 	}
 
-	return ditherimg
+	ofile := CreateFile(filename)
+	png.Encode(ofile, img)
+	ofile.Close()
 }

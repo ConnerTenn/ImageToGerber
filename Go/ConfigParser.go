@@ -13,14 +13,18 @@ type Process struct {
 	Infile     string
 	Outfile    string
 	Types      []string
-	HasDither  bool
-	Dither     float64
 	Fill       string
 	Seed       int64
 	Selection  []Rule
 }
 
-func ParseConfig(filename string) []Process {
+type DitherCfg struct {
+	Factor  float64
+	Scale   float64
+	OutFile string
+}
+
+func ParseConfig(filename string) ([]Process, []DitherCfg) {
 	file, err := os.Open(filename)
 	CheckError(err)
 
@@ -33,9 +37,13 @@ func ParseConfig(filename string) []Process {
 	var processlist []Process
 
 	currProcess.Infile = ""
-	currProcess.HasDither = false
 	currProcess.Fill = "Solid"
 	currProcess.Seed = 0
+
+	var currDither DitherCfg
+	var ditherlist []DitherCfg
+
+	currDither.Scale = 1.0
 
 	scanner := bufio.NewScanner(file)
 	//Loop through each line
@@ -51,7 +59,6 @@ func ParseConfig(filename string) []Process {
 			processlist = append(processlist, currProcess)
 			//Reset selection but keep other settings
 			currProcess.Selection = make([]Rule, 0)
-			currProcess.Fill = "Solid"
 		}
 
 		if len(line) > 0 {
@@ -73,7 +80,7 @@ func ParseConfig(filename string) []Process {
 					currProcess.BoardWidth = boardwidth
 				case "Infile":
 					currProcess.Infile = strings.Trim(value, "\"")
-					currProcess.HasDither = false
+					currProcess.Fill = "Solid"
 				case "Outfile":
 					currProcess.Outfile = strings.Trim(value, "\"")
 				case "Dither":
@@ -81,10 +88,17 @@ func ParseConfig(filename string) []Process {
 					if len(value) != 2 {
 						CheckError("Invalid Dither format")
 					}
-					currProcess.Dither, err = strconv.ParseFloat(value[0], 64)
-					currProcess.Dither = currProcess.Dither / 100.0
-					currProcess.HasDither = true
+					currDither.Factor, err = strconv.ParseFloat(value[0], 64)
+					currDither.Factor = currDither.Factor / 100.0
 					CheckError(err)
+				case "DitherScale":
+					currDither.Scale, err = strconv.ParseFloat(value, 64)
+					CheckError(err)
+				case "DitherFile":
+					currDither.OutFile = strings.Trim(value, "\"")
+					ditherlist = append(ditherlist, currDither)
+					currDither = DitherCfg{Scale: 1.0}
+
 				case "Fill":
 					currProcess.Fill = value
 				case "Seed":
@@ -177,5 +191,5 @@ func ParseConfig(filename string) []Process {
 	// }
 
 	file.Close()
-	return processlist
+	return processlist, ditherlist
 }
