@@ -105,6 +105,9 @@ func main() {
 			//Post Process the fill type
 			if process.Fill != "Solid" {
 				tokens := strings.Split(process.Fill, "\"")
+				if len(tokens) != 3 {
+					CheckError("Invalid Fill specifier")
+				}
 				fillfile, err := os.Open(tokens[1])
 				CheckError(err)
 				fillimg, err := png.Decode(fillfile)
