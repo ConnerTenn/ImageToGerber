@@ -9,7 +9,7 @@ import (
 
 type DitherImg [][]float64
 
-func CreateKernel() [][]float64 {
+func CreateKernel() ([][]float64, int, int) {
 	// kernel := [][]float64{
 	// 	{0.0, 0.0, 7.0},
 	// 	{3.0, 5.0, 1.0},
@@ -48,14 +48,18 @@ func CreateKernel() [][]float64 {
 		}
 	}
 
-	return kernel
+	return kernel, len(kernel[0]), len(kernel) + 1
 }
 
 func GenerateDither(width int, height int, factor float64, scale float64) DitherImg {
 	Print("Generating Dither [%dx%d] factor:%f scale:%f\n", width, height, factor, scale)
 
-	ditherWidth := int(float64(width) / scale)
-	ditherHeight := int(float64(width) / scale)
+	//https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
+	//Floyd-Steinberg Dithering
+	kernel, kDeadZoneWidth, kDeadZoneHeight := CreateKernel()
+
+	ditherWidth := int(float64(width)/scale) + kDeadZoneWidth*2
+	ditherHeight := int(float64(width)/scale) + kDeadZoneHeight
 
 	dither := make(DitherImg, ditherHeight)
 	for y := range dither {
@@ -66,10 +70,6 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 			dither[y][x] = (0.1 * (rand.Float64() - 0.5)) + factor
 		}
 	}
-
-	//https://en.wikipedia.org/wiki/Floyd%E2%80%93Steinberg_dithering
-	//Floyd-Steinberg Dithering
-	kernel := CreateKernel()
 
 	//Perform a convolution-like operation over the image
 	for y := 0; y < ditherHeight; y++ {
@@ -105,7 +105,12 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 		}
 	}
 
-	return dither
+	//Chop off kDeadZoneWidth pixels from the left and right sides of each line
+	for y := 0; y < ditherHeight; y++ {
+		dither[y] = dither[y][kDeadZoneWidth : ditherWidth-kDeadZoneWidth]
+	}
+	//Chop off top kDeadZoneWidth pixels from image
+	return dither[kDeadZoneHeight:]
 }
 
 func WriteDitherToFile(ditherImg DitherImg, filename string) {
