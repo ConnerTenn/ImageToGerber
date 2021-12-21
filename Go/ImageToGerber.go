@@ -87,7 +87,7 @@ func main() {
 	}
 
 	for _, dither := range ditherlist {
-		ditherImg := GenerateDither(maxBounds.X, maxBounds.Y, dither.Factor)
+		ditherImg := GenerateDither(maxBounds.X, maxBounds.Y, dither.Factor, dither.Scale)
 		WriteDitherToFile(ditherImg, dither.OutFile)
 	}
 

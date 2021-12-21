@@ -51,12 +51,15 @@ func CreateKernel() [][]float64 {
 	return kernel
 }
 
-func GenerateDither(width int, height int, factor float64) DitherImg {
-	Print("Generating Dither [%dx%d] factor:%f\n", width, height, factor)
+func GenerateDither(width int, height int, factor float64, scale float64) DitherImg {
+	Print("Generating Dither [%dx%d] factor:%f scale:%f\n", width, height, factor, scale)
 
-	dither := make(DitherImg, height)
+	ditherWidth := int(float64(width) / scale)
+	ditherHeight := int(float64(width) / scale)
+
+	dither := make(DitherImg, ditherHeight)
 	for y := range dither {
-		dither[y] = make([]float64, width)
+		dither[y] = make([]float64, ditherWidth)
 		for x := range dither[y] {
 			//Add a bit of random adjustment as a 'seed' for the dither
 			//Without it, the pattern would be too uniform
@@ -69,8 +72,8 @@ func GenerateDither(width int, height int, factor float64) DitherImg {
 	kernel := CreateKernel()
 
 	//Perform a convolution-like operation over the image
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
+	for y := 0; y < ditherHeight; y++ {
+		for x := 0; x < ditherWidth; x++ {
 			old := dither[y][x]
 
 			//Clamp to 0 or 1
@@ -87,11 +90,11 @@ func GenerateDither(width int, height int, factor float64) DitherImg {
 
 			//Convolve with the kernel
 			for yoff, kernelRow := range kernel {
-				if y+yoff < height { //Bounds check
+				if y+yoff < ditherHeight { //Bounds check
 
 					for xoff, kfactor := range kernelRow {
-						xoff = xoff - len(kernelRow)/2     //Kernel is centered horizontally about the current pixel
-						if x+xoff >= 0 && x+xoff < width { //Bounds check
+						xoff = xoff - len(kernelRow)/2           //Kernel is centered horizontally about the current pixel
+						if x+xoff >= 0 && x+xoff < ditherWidth { //Bounds check
 
 							//Carry over error to neghboring pixels, weighted by the kernel factor
 							dither[y+yoff][x+xoff] = dither[y+yoff][x+xoff] + quantError*kfactor
