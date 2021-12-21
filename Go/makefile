@@ -1,7 +1,7 @@
 
 .PHONY: clean
 
-ImageToGerber: ImageToGerber.go
+ImageToGerber: *.go
 	go build -o ImageToGerber
 
 clean:
