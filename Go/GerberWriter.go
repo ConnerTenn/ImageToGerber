@@ -15,14 +15,14 @@ func FinishFile(file *os.File, buff []byte) {
 
 func NumRepr(num float64) string {
 	integer := int(num)
-	fraction := int(math.Mod(num, 1.0))
+	fraction := int(math.Abs(math.Mod(num, 1.0)) * 1000000)
 	return fmt.Sprintf("%04d%06d", integer, fraction)
 	// return strings.ReplaceAll(fmt.Sprintf("%011.6f", num), ".", "")
 }
 
 func WriteHeader(buff []byte, gerberType string) []byte {
-	buff = append(buff, []byte("%%TF.GenerationSoftware,ImageToGerber,Design,1.1.0*%\n")...)
-	buff = append(buff, []byte("%%TF.SameCoordinates,Original*%\n")...)
+	buff = append(buff, []byte("%TF.GenerationSoftware,ImageToGerber,Design,1.1.0*%\n")...)
+	buff = append(buff, []byte("%TF.SameCoordinates,Original*%\n")...)
 	if gerberType == "F_Cu" {
 		// Front Copper
 		buff = append(buff, []byte("%TF.FileFunction,Copper,L1,Top*%\n")...)
@@ -49,7 +49,7 @@ func WriteHeader(buff []byte, gerberType string) []byte {
 		buff = append(buff, []byte("%TF.FilePolarity,Positive*%\n")...)
 	} else if gerberType == "Edge_Cuts" {
 		// Edge Cuts
-		buff = append(buff, []byte("%%TF.FileFunction,Profile,NP*%\n")...)
+		buff = append(buff, []byte("%TF.FileFunction,Profile,NP*%\n")...)
 	}
 
 	buff = append(buff, []byte("%FSLAX46Y46*%\n")...) //Number Format
@@ -66,7 +66,7 @@ func GerberCreateLine(buff []byte, scaleWidth float64, scaleHeight float64, img 
 	buff = append(buff, []byte(
 		fmt.Sprintf("X%sY%sD03*\n",
 			NumRepr(scaleWidth*(float64(x)-float64(rectsize)/2)),
-			NumRepr(scaleHeight*(float64((*img).Bounds().Dy()-y)+1.0/2)),
+			NumRepr(scaleHeight*(float64((*img).Bounds().Dy()-y)+0.5)),
 		),
 	)...) //Place rectangle
 
@@ -144,9 +144,9 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 
 	buff = append(buff, []byte("G01*\n")...) //Linear interpolation mode
 	// # file.write("%TA.AperFunction,Profile*%")
-	buff = append(buff, []byte("%ADD10C,0.200000*%")...) //Circle aperture
+	buff = append(buff, []byte("%ADD10C,0.200000*%\n")...) //Circle aperture
 	// # file.write("%TD*%")
-	buff = append(buff, []byte("D10*")...) //Use aperture
+	buff = append(buff, []byte("D10*\n")...) //Use aperture
 
 	//Loop for every segment
 	var i int
@@ -163,7 +163,7 @@ func GenerateGerberTrace(img image.Image, gerberWidth float64, gerberHeight floa
 		)...)
 		//Create P2
 		buff = append(buff, []byte(
-			fmt.Sprintf("X%sY%sD02*\n",
+			fmt.Sprintf("X%sY%sD01*\n",
 				NumRepr(scaleWidth*segment.P2.X),
 				NumRepr(scaleHeight*(float64(img.Bounds().Dy())-segment.P2.Y)),
 			),

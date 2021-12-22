@@ -40,7 +40,7 @@ var LineData = []LineKernel{
 			true, true},
 		Segments: [][2]int{{2, 4}},
 	},
-	LineKernel{
+	{
 		Kernel: [4]bool{true, false,
 			true, false},
 		Segments: [][2]int{{1, 3}},
@@ -107,6 +107,12 @@ var LineData = []LineKernel{
 
 // #Linear interpolation between p1 and p2, based on the relative values of a,b, and 0.5
 func InterpolatePos(p1 float64, p2 float64, a float64, b float64) float64 {
+
+	//Handle inf condition
+	if b-a == 0 {
+		return (p1 + p2) / 2
+	}
+
 	mu := (0.5 - a) / (b - a)
 	return p1 + mu*(p2-p1)
 }
@@ -115,13 +121,13 @@ func InterpolatePos(p1 float64, p2 float64, a float64, b float64) float64 {
 func ConvertToCoords(lineIdx int, p Point, tl float64, tr float64, bl float64, br float64) Point {
 	switch lineIdx {
 	case 1:
-		return Point{InterpolatePos(p.X+0, p.X+1, tl, tr), InterpolatePos(p.Y+1, p.Y+1, tl, tr)}
+		return Point{InterpolatePos(p.X+0, p.X+1, tl, tr), InterpolatePos(p.Y+0, p.Y+0, tl, tr)}
 	case 2:
-		return Point{InterpolatePos(p.X+1, p.X+0, tl, tr), InterpolatePos(p.Y+1, p.Y+1, tl, tr)}
+		return Point{InterpolatePos(p.X+1, p.X+1, br, tr), InterpolatePos(p.Y+1, p.Y+0, br, tr)}
 	case 3:
-		return Point{InterpolatePos(p.X+0, p.X+0, tl, tr), InterpolatePos(p.Y+1, p.Y+0, tl, tr)}
+		return Point{InterpolatePos(p.X+0, p.X+1, bl, br), InterpolatePos(p.Y+1, p.Y+1, bl, br)}
 	case 4:
-		return Point{InterpolatePos(p.X+0, p.X+0, tl, tr), InterpolatePos(p.Y+0, p.Y+1, tl, tr)}
+		return Point{InterpolatePos(p.X+0, p.X+0, tl, bl), InterpolatePos(p.Y+0, p.Y+1, tl, bl)}
 	}
 	return Point{0, 0}
 }
@@ -130,7 +136,8 @@ func GenerateSegments(pos Point, tl float64, tr float64, bl float64, br float64)
 	var segments []Segment
 
 	// Check if any work has to be done for this selection
-	if !((tl >= 0.5) == (tr >= 0.5) == (bl >= 0.5) == (br >= 0.5)) {
+	if !((tl >= 0.5 && tr >= 0.5 && bl >= 0.5 && br >= 0.5) ||
+		(tl < 0.5 && tr < 0.5 && bl < 0.5 && br < 0.5)) {
 		// Check each to see what line data matches the pixel pattern
 		for _, dat := range LineData {
 			// Check to see if the pixel pattern matches

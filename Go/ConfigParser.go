@@ -13,10 +13,18 @@ type Process struct {
 	Infile     string
 	Outfile    string
 	Types      []string
+	Fill       string
+	Seed       int64
 	Selection  []Rule
 }
 
-func ParseConfig(filename string) []Process {
+type DitherCfg struct {
+	Factor  float64
+	Scale   float64
+	OutFile string
+}
+
+func ParseConfig(filename string) ([]Process, []DitherCfg) {
 	file, err := os.Open(filename)
 	CheckError(err)
 
@@ -27,6 +35,15 @@ func ParseConfig(filename string) []Process {
 	readingSelection := false
 	var currProcess Process
 	var processlist []Process
+
+	currProcess.Infile = ""
+	currProcess.Fill = "Solid"
+	currProcess.Seed = 0
+
+	var currDither DitherCfg
+	var ditherlist []DitherCfg
+
+	currDither.Scale = 1.0
 
 	scanner := bufio.NewScanner(file)
 	//Loop through each line
@@ -63,8 +80,30 @@ func ParseConfig(filename string) []Process {
 					currProcess.BoardWidth = boardwidth
 				case "Infile":
 					currProcess.Infile = strings.Trim(value, "\"")
+					currProcess.Fill = "Solid"
 				case "Outfile":
 					currProcess.Outfile = strings.Trim(value, "\"")
+				case "Dither":
+					value := strings.Split(value, "%")
+					if len(value) != 2 {
+						CheckError("Invalid Dither format")
+					}
+					currDither.Factor, err = strconv.ParseFloat(value[0], 64)
+					currDither.Factor = currDither.Factor / 100.0
+					CheckError(err)
+				case "DitherScale":
+					currDither.Scale, err = strconv.ParseFloat(value, 64)
+					CheckError(err)
+				case "DitherFile":
+					currDither.OutFile = strings.Trim(value, "\"")
+					ditherlist = append(ditherlist, currDither)
+					currDither = DitherCfg{Scale: 1.0}
+
+				case "Fill":
+					currProcess.Fill = value
+				case "Seed":
+					currProcess.Seed, err = strconv.ParseInt(value, 10, 64)
+					CheckError(err)
 				case "Selection":
 					currProcess.Types = strings.Split(value, ",")
 					readingSelection = true
@@ -152,5 +191,5 @@ func ParseConfig(filename string) []Process {
 	// }
 
 	file.Close()
-	return processlist
+	return processlist, ditherlist
 }
