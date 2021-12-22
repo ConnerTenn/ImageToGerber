@@ -4,8 +4,98 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	"math"
 	"math/rand"
 )
+
+//x: E [0,1]
+//y: E [0,1]
+func InsideRegion(tl bool, tr bool, bl bool, br bool, x float64, y float64) bool {
+	x = x - 0.5
+	y = y - 0.5
+
+	// # #
+	// - -
+	if tl && tr && !bl && !br {
+		return y <= 0
+	}
+	// - -
+	// # #
+	if !tl && !tr && bl && br {
+		return y >= 0
+	}
+	// # -
+	// # -
+	if tl && !tr && bl && !br {
+		return x <= 0
+	}
+	// - #
+	// - #
+	if !tl && tr && !bl && br {
+		return x >= 0
+	}
+
+	// # -
+	// - -
+	if tl && !tr && !bl && !br {
+		return -x-y >= 0.5
+	}
+	// - #
+	// - -
+	if !tl && tr && !bl && !br {
+		return +x-y >= 0.5
+	}
+	// - -
+	// # -
+	if !tl && !tr && bl && !br {
+		return -x+y >= 0.5
+	}
+	// - -
+	// - #
+	if !tl && !tr && !bl && br {
+		return +x+y >= 0.5
+	}
+
+	// - #
+	// # #
+	if !tl && tr && bl && br {
+		return +x+y >= -0.5
+	}
+	// # -
+	// # #
+	if tl && !tr && bl && br {
+		return -x+y >= -0.5
+	}
+	// # #
+	// - #
+	if tl && tr && !bl && br {
+		return +x-y >= -0.5
+	}
+	// # #
+	// # -
+	if tl && tr && bl && !br {
+		return -x-y >= -0.5
+	}
+
+	// # -
+	// - #
+	if tl && !tr && !bl && br {
+		return -x-y >= 0.5 || +x+y >= 0.5
+	}
+	// - #
+	// # -
+	if !tl && tr && bl && !br {
+		return +x-y >= 0.5 || -x+y >= 0.5
+	}
+
+	// # #
+	// # #
+	if tl && tr && bl && br {
+		return true
+	}
+
+	return false
+}
 
 type DitherImg [][]float64
 
@@ -61,20 +151,20 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 	ditherWidth := int(float64(width)/scale) + kDeadZoneWidth*2
 	ditherHeight := int(float64(width)/scale) + kDeadZoneHeight
 
-	dither := make(DitherImg, ditherHeight)
-	for y := range dither {
-		dither[y] = make([]float64, ditherWidth)
-		for x := range dither[y] {
+	rawDither := make(DitherImg, ditherHeight)
+	for y := range rawDither {
+		rawDither[y] = make([]float64, ditherWidth)
+		for x := range rawDither[y] {
 			//Add a bit of random adjustment as a 'seed' for the dither
 			//Without it, the pattern would be too uniform
-			dither[y][x] = (0.1 * (rand.Float64() - 0.5)) + factor
+			rawDither[y][x] = (0.1 * (rand.Float64() - 0.5)) + factor
 		}
 	}
 
 	//Perform a convolution-like operation over the image
 	for y := 0; y < ditherHeight; y++ {
 		for x := 0; x < ditherWidth; x++ {
-			old := dither[y][x]
+			old := rawDither[y][x]
 
 			//Clamp to 0 or 1
 			new := 0.0
@@ -83,7 +173,7 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 			}
 
 			//Set the pixel
-			dither[y][x] = new
+			rawDither[y][x] = new
 
 			//calculate the error
 			quantError := old - float64(new)
@@ -97,7 +187,7 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 						if x+xoff >= 0 && x+xoff < ditherWidth { //Bounds check
 
 							//Carry over error to neghboring pixels, weighted by the kernel factor
-							dither[y+yoff][x+xoff] = dither[y+yoff][x+xoff] + quantError*kfactor
+							rawDither[y+yoff][x+xoff] = rawDither[y+yoff][x+xoff] + quantError*kfactor
 						}
 					}
 				}
@@ -107,10 +197,58 @@ func GenerateDither(width int, height int, factor float64, scale float64) Dither
 
 	//Chop off kDeadZoneWidth pixels from the left and right sides of each line
 	for y := 0; y < ditherHeight; y++ {
-		dither[y] = dither[y][kDeadZoneWidth : ditherWidth-kDeadZoneWidth]
+		rawDither[y] = rawDither[y][kDeadZoneWidth : ditherWidth-kDeadZoneWidth]
 	}
 	//Chop off top kDeadZoneWidth pixels from image
-	return dither[kDeadZoneHeight:]
+	rawDither = rawDither[kDeadZoneHeight:]
+	//Recalculate Dimensions
+	ditherWidth = len(rawDither[0])
+	ditherHeight = len(rawDither)
+
+	//Make new buffer for the final dither output
+	dither := make(DitherImg, height)
+	for y := range dither {
+		dither[y] = make([]float64, width)
+		for x := range dither[y] {
+			//Init to zero
+			dither[y][x] = 0
+		}
+	}
+
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			bufX := float64(ditherWidth) * float64(x) / float64(width)
+			bufY := float64(ditherHeight) * float64(y) / float64(height)
+
+			bufX_l := int(bufX)
+			bufX_r := int(math.Ceil(bufX))
+			bufY_t := int(bufY)
+			bufY_b := int(math.Ceil(bufY))
+
+			var tl float64 = 0.0
+			var tr float64 = 0.0
+			var bl float64 = 0.0
+			var br float64 = 0.0
+
+			tl = rawDither[bufY_t][bufX_l]
+			if bufX_r < ditherWidth {
+				tr = rawDither[bufY_t][bufX_r]
+			}
+
+			if bufY_b < ditherHeight {
+				bl = rawDither[bufY_b][bufX_l]
+				if bufX_r < ditherWidth {
+					br = rawDither[bufY_b][bufX_r]
+				}
+			}
+
+			if InsideRegion(tl >= 0.5, tr >= 0.5, bl >= 0.5, br >= 0.5, math.Mod(bufX, 1.0), math.Mod(bufY, 1.0)) {
+				dither[y][x] = 1.0
+			}
+		}
+	}
+
+	return dither
 }
 
 func WriteDitherToFile(ditherImg DitherImg, filename string) {
