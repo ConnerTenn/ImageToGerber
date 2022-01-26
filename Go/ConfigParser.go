@@ -13,9 +13,9 @@ type Process struct {
 	Infile     string
 	Outfile    string
 	Types      []string
-	Fill       string
-	Seed       int64
-	Selection  []Rule
+	// Fill       string
+	Seed      int64
+	Selection []Rule
 }
 
 type DitherCfg struct {
@@ -37,7 +37,7 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 	var processlist []Process
 
 	currProcess.Infile = ""
-	currProcess.Fill = "Solid"
+	// currProcess.Fill = "Solid"
 	currProcess.Seed = 0
 
 	var currDither DitherCfg
@@ -80,7 +80,6 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 					currProcess.BoardWidth = boardwidth
 				case "Infile":
 					currProcess.Infile = strings.Trim(value, "\"")
-					currProcess.Fill = "Solid"
 				case "Outfile":
 					currProcess.Outfile = strings.Trim(value, "\"")
 				case "Dither":
@@ -99,8 +98,6 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 					ditherlist = append(ditherlist, currDither)
 					currDither = DitherCfg{Scale: 1.0}
 
-				case "Fill":
-					currProcess.Fill = value
 				case "Seed":
 					currProcess.Seed, err = strconv.ParseInt(value, 10, 64)
 					CheckError(err)
@@ -113,20 +110,37 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 			} else {
 				//Reading Selection
 				// fmt.Println("  " + line)
+				ruleLine := strings.Split(line, "|")
+				if len(ruleLine) > 2 {
+					CheckError("Invalid Rule format")
+				}
 
 				//parsing the Inversion specifier
 				var newrule Rule
-				if strings.HasPrefix(line, "!") {
+				if strings.HasPrefix(ruleLine[0], "!") {
 					newrule.Inv = true
-					line = strings.Split(line, "!")[1]
-				} else if strings.Count(line, "!") != 0 {
+					line = strings.Split(ruleLine[0], "!")[1]
+				} else if strings.Count(ruleLine[0], "!") != 0 {
 					CheckError("Invalid rule format")
 				} else {
 					newrule.Inv = false
 				}
 
+				newrule.FillInv = false
+				newrule.FillImg = nil
+				newrule.FillStr = ""
+				if len(ruleLine) == 2 {
+					if strings.HasPrefix(ruleLine[1], "!") {
+						newrule.FillInv = false
+						ruleLine[1] = strings.Split(ruleLine[1], "!")[1]
+					} else if strings.Count(ruleLine[1], "!") != 0 {
+						CheckError("Invalid rule format")
+					}
+					newrule.FillStr = strings.Trim(strings.Trim(ruleLine[1], " "), "\"")
+				}
+
 				//Split the rule into conditions
-				conditions := strings.Split(line, "&")
+				conditions := strings.Split(ruleLine[0], "&")
 				//Parse each condition in this rule
 				for _, cond := range conditions {
 					cond = strings.Trim(cond, " ")

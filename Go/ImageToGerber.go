@@ -99,25 +99,38 @@ func main() {
 			//Get Cache
 			img := imageCache[process.Infile]
 
+			for i, rule := range process.Selection {
+				if len(rule.FillStr) > 0 {
+					fmt.Println(rule.FillStr)
+					fillfile, err := os.Open(rule.FillStr)
+					CheckError(err)
+					process.Selection[i].FillImg, err = png.Decode(fillfile)
+					CheckError(err)
+					fmt.Println("Ajdbwkjdjwadwd")
+
+					defer fillfile.Close()
+				}
+			}
+
 			//Select Config
 			newimg := SelectColors(img, &process.Selection, printer)
 
-			//Post Process the fill type
-			if process.Fill != "Solid" {
-				tokens := strings.Split(process.Fill, "\"")
-				if len(tokens) != 3 {
-					CheckError("Invalid Fill specifier")
-				}
-				fillfile, err := os.Open(tokens[1])
-				CheckError(err)
-				fillimg, err := png.Decode(fillfile)
-				CheckError(err)
+			// //Post Process the fill type
+			// if process.Fill != "Solid" {
+			// 	tokens := strings.Split(process.Fill, "\"")
+			// 	if len(tokens) != 3 {
+			// 		CheckError("Invalid Fill specifier")
+			// 	}
+			// 	fillfile, err := os.Open(tokens[1])
+			// 	CheckError(err)
+			// 	fillimg, err := png.Decode(fillfile)
+			// 	CheckError(err)
 
-				//Process image
-				newimg = FillMask(newimg, fillimg, tokens[2])
+			// 	//Process image
+			// 	newimg = FillMask(newimg, fillimg, tokens[2])
 
-				fillfile.Close()
-			}
+			// 	fillfile.Close()
+			// }
 
 			//Image preview output
 			imgName := process.Outfile + "-" + process.Types[0] + ".png"

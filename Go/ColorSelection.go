@@ -15,8 +15,11 @@ type Condition struct {
 }
 
 type Rule struct {
-	Cond []Condition
-	Inv  bool
+	Cond    []Condition
+	Inv     bool
+	FillImg image.Image
+	FillStr string
+	FillInv bool
 }
 
 type ColorRepr struct {
@@ -90,13 +93,18 @@ func TestTolWrap(value float64, target float64, tolPos float64, tolNeg float64) 
 	return math.Mod(value-target, 1.0) <= tolPos && math.Mod(target-value, 1.0) <= tolNeg
 }
 
-func SelectPixel(pixel color.Color, selection *[]Rule) bool {
+func SelectPixel(pixel color.Color, selection *[]Rule, x int, y int) bool {
 	repr := GetColourRepr(pixel)
 
 	passRules := false
 
 	for _, rule := range *selection {
 		passConditions := true
+
+		if rule.FillImg != nil {
+			mask, _, _, _ := rule.FillImg.At(x, y).RGBA()
+			passConditions = (rule.FillInv != (mask == 65535))
+		}
 
 		for _, cond := range rule.Cond {
 			if cond.Fmt == "R" {
@@ -142,7 +150,7 @@ func SelectRow(img image.Image, imgLock *sync.Mutex, selection *[]Rule, yidx cha
 		if more {
 			//Process Job
 			for x := 0; x < img.Bounds().Max.X; x++ {
-				if SelectPixel(img.At(x, y), selection) {
+				if SelectPixel(img.At(x, y), selection, x, y) {
 					newimg.Set(x, y, color.White)
 				} else {
 					newimg.Set(x, y, color.Black)
@@ -210,24 +218,24 @@ func SelectColors(img image.Image, selection *[]Rule, printer Printer) *image.RG
 	return newimg
 }
 
-func FillMask(img image.Image, fillimg image.Image, polarity string) *image.RGBA {
-	newimg := image.NewRGBA(img.Bounds())
+// func FillMask(img image.Image, fillimg image.Image, polarity string) *image.RGBA {
+// 	newimg := image.NewRGBA(img.Bounds())
 
-	//Process image
-	for y := 0; y < img.Bounds().Dy(); y++ {
-		for x := 0; x < img.Bounds().Dx(); x++ {
-			pixel := fillimg.At(x%fillimg.Bounds().Dx(), y%fillimg.Bounds().Dy())
-			repr := GetColourRepr(pixel)
+// 	//Process image
+// 	for y := 0; y < img.Bounds().Dy(); y++ {
+// 		for x := 0; x < img.Bounds().Dx(); x++ {
+// 			pixel := fillimg.At(x%fillimg.Bounds().Dx(), y%fillimg.Bounds().Dy())
+// 			repr := GetColourRepr(pixel)
 
-			//Select pixel according to the fill mask
-			if polarity == "+" && repr.V >= 0.5 ||
-				polarity == "-" && repr.V < 0.5 {
-				newimg.Set(x, y, img.At(x, y))
-			} else {
-				newimg.Set(x, y, color.Black)
-			}
-		}
-	}
+// 			//Select pixel according to the fill mask
+// 			if polarity == "+" && repr.V >= 0.5 ||
+// 				polarity == "-" && repr.V < 0.5 {
+// 				newimg.Set(x, y, img.At(x, y))
+// 			} else {
+// 				newimg.Set(x, y, color.Black)
+// 			}
+// 		}
+// 	}
 
-	return newimg
-}
+// 	return newimg
+// }
