@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+const Version = "1.2"
+
 type Process struct {
 	BoardWidth float64
 	Infile     string
@@ -32,6 +34,7 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 	// fmt.Println("========")
 
 	//State variables
+	checkedVersion := false
 	readingSelection := false
 	var currProcess Process
 	var processlist []Process
@@ -65,11 +68,16 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 			if !readingSelection {
 				//Normal line parse
 				keyvalue := strings.Split(line, "=")
-				key := keyvalue[0]
-				value := keyvalue[1]
+				key := strings.Trim(keyvalue[0], " ")
+				value := strings.Trim(keyvalue[1], " ")
 				// fmt.Println(key)
 
 				switch key {
+				case "Version":
+					if value != Version {
+						CheckError("Version Mismatch: "+value != " (expected) "+Version)
+					}
+					checkedVersion = true
 				case "Width":
 					value := strings.Split(value, "mm")
 					if len(value) != 2 {
@@ -203,6 +211,10 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 	// for _, process := range processlist {
 	// 	fmt.Println(process)
 	// }
+
+	if !checkedVersion {
+		CheckError("Version not specified")
+	}
 
 	file.Close()
 	return processlist, ditherlist
