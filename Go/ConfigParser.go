@@ -130,8 +130,8 @@ func ParseConfig(filename string) ([]Process, []DitherCfg) {
 				newrule.FillImg = nil
 				newrule.FillStr = ""
 				if len(ruleLine) == 2 {
-					if strings.HasPrefix(ruleLine[1], "!") {
-						newrule.FillInv = false
+					if strings.HasPrefix(strings.Trim(ruleLine[1], " "), "!") {
+						newrule.FillInv = true
 						ruleLine[1] = strings.Split(ruleLine[1], "!")[1]
 					} else if strings.Count(ruleLine[1], "!") != 0 {
 						CheckError("Invalid rule format")
